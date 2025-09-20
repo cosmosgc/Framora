@@ -7,12 +7,36 @@ O projeto utiliza **Breeze** para autenticação, **Blade** como sistema de temp
 
 ## 🚀 Tecnologias
 
-- [Laravel 11](https://laravel.com) — Framework principal  
+- [Laravel  ](https://laravel.com) — Framework principal  
 - [Blade](https://laravel.com/docs/blade) — Engine de templates nativo  
 - [Laravel Breeze](https://laravel.com/docs/starter-kits#breeze) — Autenticação simples e elegante  
 - [Pest](https://pestphp.com) — Framework de testes em PHP  
 
 ---
+
+## 🛠️ Requisitos
+
+Antes de rodar o projeto, certifique-se de ter instalado:
+
+- [PHP 8.2+](https://www.php.net/downloads) (com extensões `pdo`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`)
+- [Composer](https://getcomposer.org/download/) (gerenciador de dependências do PHP)
+- [Node.js 18+](https://nodejs.org) e [NPM](https://www.npmjs.com) (para compilar assets front-end)
+- [MySQL](https://dev.mysql.com/downloads/) ou [SQLite](https://www.sqlite.org/download.html) (banco de dados)
+
+### Windows
+
+1. Instale o [XAMPP](https://www.apachefriends.org/pt_br/index.html) ou [Laragon](https://laragon.org/) (vem com PHP e MySQL).
+2. Instale o [Composer](https://getcomposer.org/Composer-Setup.exe).
+3. Instale o [Node.js](https://nodejs.org/en/download/).
+
+### Linux (Ubuntu/Debian)
+
+```bash
+sudo apt update
+sudo apt install php php-cli php-mbstring php-xml php-bcmath php-curl unzip curl
+sudo apt install composer
+sudo apt install nodejs npm
+
 
 ## ⚙️ Setup do Projeto
 
