@@ -36,7 +36,7 @@ sudo apt update
 sudo apt install php php-cli php-mbstring php-xml php-bcmath php-curl unzip curl
 sudo apt install composer
 sudo apt install nodejs npm
-
+```
 
 ## ⚙️ Setup do Projeto
 
