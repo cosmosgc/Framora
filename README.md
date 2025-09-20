@@ -36,13 +36,13 @@ sudo apt update
 sudo apt install php php-cli php-mbstring php-xml php-bcmath php-curl unzip curl
 sudo apt install composer
 sudo apt install nodejs npm
-
+```
 
 ## ⚙️ Setup do Projeto
 
 ### 1. Clonar o repositório
 ```bash
-git clone https://github.com/seu-usuario/framora.git
+git clone https://github.com/cosmosgc/framora.git
 cd framora
 ```
 ### 2. Instalar dependências
