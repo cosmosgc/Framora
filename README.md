@@ -42,7 +42,7 @@ sudo apt install nodejs npm
 
 ### 1. Clonar o repositório
 ```bash
-git clone https://github.com/seu-usuario/framora.git
+git clone https://github.com/cosmosgc/framora.git
 cd framora
 ```
 ### 2. Instalar dependências
