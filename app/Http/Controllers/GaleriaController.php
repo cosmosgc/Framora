@@ -2,16 +2,75 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Galeria;
+use App\Models\Categoria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class GaleriaController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * Inclui busca, filtros, paginação e ordenação.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $search       = $request->input('search');
+        $categoria_id = $request->input('categoria_id');
+        $ativo        = $request->input('ativo');
+        $sortBy       = $request->input('sort_by', 'id');
+        $sortOrder    = $request->input('sort_order', 'desc');
+        $perPage      = $request->input('per_page', 15);
+
+        $query = Galeria::query()
+            ->with(['categoria:id,nome', 'banner:id,titulo,imagem'])
+            ->select('galerias.*');
+
+        // 🔍 Busca textual
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nome', 'like', "%{$search}%")
+                  ->orWhere('descricao', 'like', "%{$search}%")
+                  ->orWhere('local', 'like', "%{$search}%");
+            });
+        }
+
+        // 🎯 Filtros
+        if (!empty($categoria_id)) {
+            $query->where('categoria_id', $categoria_id);
+        }
+
+        if ($ativo !== null && $ativo !== '') {
+            $query->where('ativo', (bool) $ativo);
+        }
+
+        // 📊 Ordenação
+        if (in_array($sortBy, ['id', 'nome', 'data', 'criado_em'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // 📄 Paginação
+        $galerias = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'filters' => [
+                'search'       => $search,
+                'categoria_id' => $categoria_id,
+                'ativo'        => $ativo,
+                'sort_by'      => $sortBy,
+                'sort_order'   => $sortOrder,
+                'per_page'     => $perPage,
+            ],
+            'data' => $galerias->items(),
+            'meta' => [
+                'current_page' => $galerias->currentPage(),
+                'last_page'    => $galerias->lastPage(),
+                'per_page'     => $galerias->perPage(),
+                'total'        => $galerias->total(),
+            ],
+        ]);
     }
 
     /**
@@ -19,7 +78,13 @@ class GaleriaController extends Controller
      */
     public function create()
     {
-        //
+        $categorias = Categoria::select('id', 'nome')->get();
+
+        return response()->json([
+            'success' => true,
+            'categorias' => $categorias,
+            'message' => 'Use POST /api/galerias para criar uma nova galeria.'
+        ]);
     }
 
     /**
@@ -27,7 +92,60 @@ class GaleriaController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'categoria_id'  => 'required|integer|exists:categorias,id',
+            'nome'          => 'required|string|max:255',
+            'descricao'     => 'nullable|string',
+            'local'         => 'nullable|string|max:255',
+            'data'          => 'nullable|date',
+            'tempo_duracao' => 'nullable|string|max:255',
+            'valor_foto'    => 'required|numeric|min:0',
+            'banner'        => 'nullable|image|max:5120', // até 5MB
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Upload do banner (opcional)
+        $bannerPath = null;
+        if ($request->hasFile('banner')) {
+            $file = $request->file('banner');
+            $filename = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
+            $bannerPath = $file->storeAs('banners', $filename, 'public');
+        }
+
+        $galeria = Galeria::create([
+            'categoria_id'  => $request->categoria_id,
+            'nome'          => $request->nome,
+            'descricao'     => $request->descricao,
+            'local'         => $request->local,
+            'data'          => $request->data,
+            'tempo_duracao' => $request->tempo_duracao,
+            'valor_foto'    => $request->valor_foto,
+            'banner_id'     => null, // pode ser setado depois
+        ]);
+
+        // Associa banner se existir
+        if ($bannerPath) {
+            $banner = \App\Models\Banner::create([
+                'titulo'     => $galeria->nome,
+                'descricao'  => $galeria->descricao,
+                'imagem'     => $bannerPath,
+                'ordem'      => 0,
+                'ativo'      => 1,
+            ]);
+            $galeria->update(['banner_id' => $banner->id]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Galeria criada com sucesso.',
+            'data'    => $galeria->load(['categoria', 'banner']),
+        ], 201);
     }
 
     /**
@@ -35,7 +153,20 @@ class GaleriaController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $galeria = Galeria::with(['categoria:id,nome', 'banner', 'fotos'])
+            ->find($id);
+
+        if (!$galeria) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Galeria não encontrada.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $galeria,
+        ]);
     }
 
     /**
@@ -43,7 +174,23 @@ class GaleriaController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $galeria = Galeria::find($id);
+
+        if (!$galeria) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Galeria não encontrada.',
+            ], 404);
+        }
+
+        $categorias = Categoria::select('id', 'nome')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $galeria,
+            'categorias' => $categorias,
+            'message' => 'Use PUT /api/galerias/{id} para atualizar esta galeria.'
+        ]);
     }
 
     /**
@@ -51,7 +198,69 @@ class GaleriaController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $galeria = Galeria::find($id);
+
+        if (!$galeria) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Galeria não encontrada.',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'categoria_id'  => 'integer|exists:categorias,id',
+            'nome'          => 'string|max:255',
+            'descricao'     => 'nullable|string',
+            'local'         => 'nullable|string|max:255',
+            'data'          => 'nullable|date',
+            'tempo_duracao' => 'nullable|string|max:255',
+            'valor_foto'    => 'numeric|min:0',
+            'banner'        => 'nullable|image|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        // Atualiza banner se enviado
+        if ($request->hasFile('banner')) {
+            $file = $request->file('banner');
+            $filename = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
+            $bannerPath = $file->storeAs('banners', $filename, 'public');
+
+            if ($galeria->banner_id) {
+                $banner = \App\Models\Banner::find($galeria->banner_id);
+                if ($banner) {
+                    Storage::disk('public')->delete($banner->imagem);
+                    $banner->update(['imagem' => $bannerPath]);
+                }
+            } else {
+                $banner = \App\Models\Banner::create([
+                    'titulo'    => $galeria->nome,
+                    'descricao' => $galeria->descricao,
+                    'imagem'    => $bannerPath,
+                    'ordem'     => 0,
+                    'ativo'     => 1,
+                ]);
+                $galeria->banner_id = $banner->id;
+            }
+        }
+
+        $galeria->fill($request->only([
+            'categoria_id', 'nome', 'descricao', 'local', 'data',
+            'tempo_duracao', 'valor_foto'
+        ]));
+
+        $galeria->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Galeria atualizada com sucesso.',
+            'data'    => $galeria->load(['categoria', 'banner']),
+        ]);
     }
 
     /**
@@ -59,6 +268,27 @@ class GaleriaController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $galeria = Galeria::with('banner')->find($id);
+
+        if (!$galeria) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Galeria não encontrada.',
+            ], 404);
+        }
+
+        // Remove banner associado (se existir)
+        if ($galeria->banner) {
+            Storage::disk('public')->delete($galeria->banner->imagem);
+            $galeria->banner->delete();
+        }
+
+        // Remove galeria
+        $galeria->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Galeria removida com sucesso.',
+        ]);
     }
 }
