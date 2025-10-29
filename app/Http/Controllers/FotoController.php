@@ -6,6 +6,7 @@ use App\Models\Foto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Intervention\Image\Image;
 
 class FotoController extends Controller
 {
@@ -93,12 +94,14 @@ class FotoController extends Controller
      * Store a newly created resource in storage.
      * Upload de imagem + criação do registro.
      */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'referencia_tipo' => 'required|in:galeria,evento',
-            'referencia_id'   => 'required|integer',
-            'foto'            => 'required|image|max:5120', // até 5MB
+            'galeria_id'   => 'required|integer',
+            'fotos'           => 'required|array',
+            'fotos.*'         => 'image|max:5120', // cada imagem até 5MB
         ]);
 
         if ($validator->fails()) {
@@ -108,48 +111,75 @@ class FotoController extends Controller
             ], 422);
         }
 
-        $file = $request->file('foto');
+        $fotosCriadas = [];
 
-        // Nome único e diretório
-        $filename = uniqid('foto_') . '.' . $file->getClientOriginalExtension();
-        $path = $file->storeAs('fotos/originais', $filename, 'public');
+        foreach ($request->file('fotos') as $file) {
+            try {
+                // Caminhos base (em public/)
+                $basePath    = public_path('uploads/fotos');
+                $originalDir = $basePath . '/originais';
+                $thumbDir    = $basePath . '/thumbs';
+                $mediaDir    = $basePath . '/medias';
 
-        // Gera versões menores (thumb, foto média)
-        $thumbPath = 'fotos/thumbs/' . $filename;
-        $fotoPath  = 'fotos/medias/' . $filename;
+                // 🔧 Garante que os diretórios existem
+                foreach ([$originalDir, $thumbDir, $mediaDir] as $dir) {
+                    if (!is_dir($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+                }
 
-        // Usa Intervention Image (caso instalada)
-        if (class_exists(\Intervention\Image\Facades\Image::class)) {
-            $image = \Intervention\Image\Facades\Image::make($file);
+                // Nome único
+                $filename = uniqid('foto_') . '.' . $file->getClientOriginalExtension();
 
-            // thumb 300px
-            $image->resize(300, null, fn($c) => $c->aspectRatio())
-                  ->save(storage_path('app/public/' . $thumbPath));
+                // Salva original
+                $file->move($originalDir, $filename);
 
-            // média 1200px
-            $image->resize(1200, null, fn($c) => $c->aspectRatio())
-                  ->save(storage_path('app/public/' . $fotoPath));
-        } else {
-            // fallback: apenas duplicar original
-            Storage::copy('public/' . $path, 'public/' . $thumbPath);
-            Storage::copy('public/' . $path, 'public/' . $fotoPath);
+                // Caminhos relativos (para salvar no banco)
+                $path = "uploads/fotos/originais/{$filename}";
+                $thumbPath = "uploads/fotos/thumbs/{$filename}";
+                $fotoPath  = "uploads/fotos/medias/{$filename}";
+
+                // 🔧 Cria versões menores com Intervention Image
+                if (class_exists(\Intervention\Image\Facades\Image::class)) {
+                    $image = Image::make($originalDir . '/' . $filename);
+
+                    // thumb 300px
+                    $image->resize(300, null, fn($c) => $c->aspectRatio())
+                        ->save($thumbDir . '/' . $filename);
+
+                    // média 1200px
+                    $image->resize(1200, null, fn($c) => $c->aspectRatio())
+                        ->save($mediaDir . '/' . $filename);
+                } else {
+                    // fallback: copiar original
+                    copy($originalDir . '/' . $filename, $thumbDir . '/' . $filename);
+                    copy($originalDir . '/' . $filename, $mediaDir . '/' . $filename);
+                }
+
+                // 🔧 Cria registro no banco
+                $foto = Foto::create([
+                    'referencia_tipo' => $request->referencia_tipo,
+                    'galeria_id'   => $request->referencia_id,
+                    'caminho_thumb'   => $thumbPath,
+                    'caminho_foto'    => $fotoPath,
+                    'caminho_original'=> $path,
+                    'ativo'           => true,
+                ]);
+
+                $fotosCriadas[] = $foto;
+
+            } catch (\Exception $e) {
+                \Log::error("Erro ao processar imagem: " . $e->getMessage());
+            }
         }
-
-        $foto = Foto::create([
-            'referencia_tipo' => $request->referencia_tipo,
-            'referencia_id'   => $request->referencia_id,
-            'caminho_thumb'   => $thumbPath,
-            'caminho_foto'    => $fotoPath,
-            'caminho_original'=> $path,
-            'ativo'           => true,
-        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Foto enviada com sucesso.',
-            'data'    => $foto,
+            'message' => count($fotosCriadas) . ' foto(s) enviada(s) com sucesso.',
+            'data'    => $fotosCriadas,
         ], 201);
     }
+
 
     /**
      * Display the specified resource.
@@ -211,7 +241,7 @@ class FotoController extends Controller
 
         $validator = Validator::make($request->all(), [
             'referencia_tipo' => 'in:galeria,evento',
-            'referencia_id'   => 'integer',
+            'galeria_id'   => 'integer',
             'foto'            => 'image|max:5120',
             'ativo'           => 'boolean',
         ]);
@@ -257,7 +287,7 @@ class FotoController extends Controller
         }
 
         // Atualiza campos gerais
-        $foto->fill($request->only(['referencia_tipo', 'referencia_id', 'ativo']));
+        $foto->fill($request->only(['referencia_tipo', 'galeria_id', 'ativo']));
         $foto->save();
 
         return response()->json([
