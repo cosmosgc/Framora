@@ -24,10 +24,10 @@ class Galeria extends Model
     public function banner()
     {
         return $this->belongsTo(Banner::class);
-    }
-
+        }
     public function fotos()
     {
-        return $this->belongsToMany(Foto::class, 'galeria_fotos');
+        return $this->hasMany(Foto::class, 'galeria_id');
     }
+
 }

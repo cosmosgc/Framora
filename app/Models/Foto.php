@@ -35,4 +35,19 @@ class Foto extends Model
     {
         return $this->belongsToMany(Galeria::class, 'galeria_fotos');
     }
+    
+    public function getUrlThumbAttribute()
+    {
+        return asset($this->caminho_thumb);
+    }
+
+    public function getUrlFotoAttribute()
+    {
+        return asset($this->caminho_foto);
+    }
+
+    public function getUrlOriginalAttribute()
+    {
+        return asset($this->caminho_original);
+    }
 }
