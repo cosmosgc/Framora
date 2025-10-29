@@ -29,13 +29,7 @@ class Foto extends Model
     public function inventarios()
     {
         return $this->hasMany(Inventario::class);
-    }
-
-    public function galerias()
-    {
-        return $this->belongsToMany(Galeria::class, 'galeria_fotos');
-    }
-    
+    }    
     public function getUrlThumbAttribute()
     {
         return asset($this->caminho_thumb);
