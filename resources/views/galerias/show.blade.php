@@ -12,6 +12,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
+    const BASE_URL = "{{ url('/') }}";
     const galeriaId = {{ $id }};
     const galeriaDiv = document.getElementById('galeria-details');
     const fotosDiv = document.getElementById('fotos-list');
@@ -21,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         // Galeria
-        const resGaleria = await fetch(`/api/galerias/${galeriaId}`);
+        const resGaleria = await fetch(`${BASE_URL}/api/galerias/${galeriaId}`);
         const galeriaData = await resGaleria.json();
 
         if (!galeriaData.success) {
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         // Fotos da galeria
-        const resFotos = await fetch(`/api/fotos?galeria_id=${galeriaId}`);
+        const resFotos = await fetch(`${BASE_URL}/api/fotos?galeria_id=${galeriaId}`);
         const fotosData = await resFotos.json();
 
         if (!fotosData.success || !fotosData.data.length) {
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         fotosDiv.innerHTML = fotosData.data.map(foto => `
-            <a href="/galerias/${galeriaId}/fotos/${foto.id}" class="block border rounded shadow-sm hover:shadow-md transition">
+            <a href="${BASE_URL}/galerias/${galeriaId}/fotos/${foto.id}" class="block border rounded shadow-sm hover:shadow-md transition">
                 <img src="/storage/${foto.caminho}" alt="${foto.nome}" class="w-full h-48 object-cover rounded-t">
                 <div class="p-2">
                     <h3 class="font-semibold text-sm">${foto.nome}</h3>
