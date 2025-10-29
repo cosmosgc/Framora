@@ -11,18 +11,20 @@ use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\FavoritoController;
 use App\Http\Controllers\PerfilController;
 
+use App\Http\Controllers\WebViewsController;
+
 
 
 // Home: banners + galerias em destaque
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Galerias: lista e escolhe uma
-Route::get('/galerias', [GaleriaController::class, 'index'])->name('galerias.index');
-Route::get('/galerias/{id}', [GaleriaController::class, 'show'])->name('galerias.show');
+// Galerias
+Route::get('/galerias', [WebViewsController::class, 'GaleriaIndex'])->name('galerias.web.index');
+Route::get('/galerias/{id}', [WebViewsController::class, 'GaleriaShow'])->name('galerias.web.show');
 
-// Fotos: lista fotos dentro da galeria
-Route::get('/galerias/{id}/fotos', [FotoController::class, 'index'])->name('fotos.index');
-Route::get('/galerias/{id}/fotos/{foto}', [FotoController::class, 'show'])->name('fotos.show');
+// Fotos dentro da galeria
+Route::get('/galerias/{id}/fotos', [WebViewsController::class, 'FotosIndex'])->name('fotos.web.index');
+Route::get('/galerias/{id}/fotos/{foto}', [WebViewsController::class, 'FotosShow'])->name('fotos.web.show');
 
 // Carrinho: visualizar e adicionar fotos
 Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
