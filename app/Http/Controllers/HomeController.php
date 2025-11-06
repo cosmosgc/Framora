@@ -3,27 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Galeria;
+use App\Models\Categoria;
 
 class HomeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        // Aqui você pode buscar banners e galerias do banco
-        // e passar para a view
-        return view('home.index', [
-            'banners' => [
-                ['id' => 1, 'title' => 'Promoção Especial', 'image' => '/images/banner1.jpg'],
-                ['id' => 2, 'title' => 'Novas Galerias', 'image' => '/images/banner2.jpg'],
-            ],
-            'galerias' => [
-                ['id' => 1, 'title' => 'Natureza', 'thumbnail' => '/images/galeria1.gif', 'description' => 'Fotos de paisagens naturais'],
-                ['id' => 2, 'title' => 'Cidades', 'thumbnail' => '/images/galeria2.gif', 'description' => 'Fotos urbanas e arquitetônicas'],
-            ],
-        ]);
-    }
+
+public function index()
+{
+    // Fetch latest 10 galerias with related category and banner
+    $galerias = Galeria::with(['categoria', 'banner'])
+        ->orderBy('id', 'desc')
+        ->take(10)
+        ->get();
+
+    // Fetch all categories (or you can limit/sort as needed)
+    $categorias = Categoria::with('banner')->orderBy('nome')->get();
+
+    // Pass to view
+    return view('home.index', compact('galerias', 'categorias'));
+}
+
 
     /**
      * Show the form for creating a new resource.

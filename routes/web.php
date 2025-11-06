@@ -46,6 +46,9 @@ Route::get('/perfil', [PerfilController::class, 'index'])->name('perfil.index');
 Route::get('/perfil/editar', [PerfilController::class, 'edit'])->name('perfil.edit');
 Route::put('/perfil', [PerfilController::class, 'update'])->name('perfil.update');
 
+Route::get('/categorias', [WebViewsController::class, 'CategoriaIndex'])->name('categorias.index');
+Route::get('/categoria/{id}', [WebViewsController::class, 'CategoriaShow'])->name('categoria.show');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');

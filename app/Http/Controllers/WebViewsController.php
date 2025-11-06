@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use Illuminate\Http\Request;
 
 class WebViewsController extends Controller
@@ -44,4 +45,19 @@ class WebViewsController extends Controller
     {
         return view('fotos.show', compact('id'));
     }
+
+    public function CategoriaIndex()
+    {
+        // Eager-load banner relation to avoid N+1 queries
+        $categorias = Categoria::with('banner')->get();
+
+        return view('categorias.index', compact('categorias'));
+    }
+    public function CategoriaShow($id)
+    {
+        $categoria = Categoria::with('galerias.banner')->findOrFail($id);
+
+        return view('categorias.show', compact('categoria'));
+    }
+
 }

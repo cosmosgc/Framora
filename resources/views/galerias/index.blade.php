@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         container.innerHTML = result.data.map(galeria => `
             <div class="border rounded-lg shadow p-3 bg-white hover:shadow-md transition">
-                <img src="${BASE_URL}/storage/${galeria.banner?.imagem ?? 'placeholder.jpg'}" alt="${galeria.nome}" class="w-full h-48 object-cover rounded mb-2">
+                <img src="${BASE_URL}/${galeria.banner?.imagem ?? 'placeholder.jpg'}" alt="${galeria.nome}" class="w-full h-48 object-cover rounded mb-2">
                 <h2 class="font-semibold text-lg">${galeria.nome}</h2>
                 <p class="text-sm text-gray-600">${galeria.descricao ?? ''}</p>
                 <a href="${BASE_URL}/galerias/${galeria.id}" class="inline-block mt-2 text-blue-600 hover:underline">Ver detalhes</a>
