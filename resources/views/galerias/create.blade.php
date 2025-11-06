@@ -5,6 +5,7 @@
     <h1 class="text-2xl font-bold mb-4">Criar Nova Galeria</h1>
 
     <form id="galeriaForm" enctype="multipart/form-data">
+        <input type="hidden" name="user_id" id="user_id_input" value="{{ auth()->id() ?? '' }}">
         <div class="mb-4">
             <label class="block font-semibold mb-1">Nome</label>
             <input type="text" name="nome" class="w-full border rounded px-3 py-2" required>
@@ -111,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     fotosForm.append('fotos[]', file);
                 }
                 fotosForm.append('referencia_tipo', 'galeria');
-                fotosForm.append('referencia_id', galeriaId);
+                fotosForm.append('galeria_id', galeriaId);
 
                 const fotosRes = await fetch(`${BASE_URL}/api/fotos`, {
                     method: 'POST',

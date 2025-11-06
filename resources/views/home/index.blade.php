@@ -10,7 +10,7 @@
     @else
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             @foreach($galerias as $galeria)
-                <div class="relative group overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100 border border-gray-200 rounded-lg shadow-sm">
+                <a href="{{ route('galerias.web.show', $galeria->id) }}" class="relative group overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100 border border-gray-200 rounded-lg shadow-sm">
                     {{-- Image --}}
                     @if($galeria->banner && $galeria->banner->imagem)
                         <img 
@@ -48,7 +48,7 @@
                             <p>📅 {{ $galeria->data }}</p>
                         </div>
                     </div>
-                </div>
+                </a>
             @endforeach
         </div>
     @endif

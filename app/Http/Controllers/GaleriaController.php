@@ -7,6 +7,7 @@ use App\Models\Categoria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class GaleriaController extends Controller
 {
@@ -101,6 +102,7 @@ class GaleriaController extends Controller
             'tempo_duracao' => 'nullable|string|max:255',
             'valor_foto'    => 'required|numeric|min:0',
             'banner'        => 'nullable|image|max:5120', // até 5MB
+            'user_id'       => 'nullable|integer|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -117,19 +119,22 @@ class GaleriaController extends Controller
             $filename = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
             $bannerPath = $file->storeAs('banners', $filename, 'public');
         }
+        // Se o usuário estiver autenticado, use o ID dele
+        $userId = Auth::check() ? Auth::id() : $request->user_id;
 
         $galeria = Galeria::create([
             'categoria_id'  => $request->categoria_id,
+            'banner_id'     => null, // será setado depois
+            'user_id'       => $userId,
             'nome'          => $request->nome,
             'descricao'     => $request->descricao,
             'local'         => $request->local,
             'data'          => $request->data,
             'tempo_duracao' => $request->tempo_duracao,
             'valor_foto'    => $request->valor_foto,
-            'banner_id'     => null, // pode ser setado depois
         ]);
 
-        // Associa banner se existir
+        // Cria banner se enviado
         if ($bannerPath) {
             $banner = \App\Models\Banner::create([
                 'titulo'     => $galeria->nome,
@@ -138,15 +143,17 @@ class GaleriaController extends Controller
                 'ordem'      => 0,
                 'ativo'      => 1,
             ]);
+
             $galeria->update(['banner_id' => $banner->id]);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Galeria criada com sucesso.',
-            'data'    => $galeria->load(['categoria', 'banner']),
+            'data'    => $galeria->load(['categoria', 'banner', 'user']),
         ], 201);
     }
+
 
     /**
      * Display the specified resource.

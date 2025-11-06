@@ -10,7 +10,7 @@ class Foto extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'referencia_tipo', 'referencia_id',
+        'referencia_tipo', 'galeria_id',
         'caminho_thumb', 'caminho_foto', 'caminho_original', 'ativo'
     ];
 

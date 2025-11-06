@@ -9,7 +9,6 @@ return new class extends Migration {
         Schema::create('fotos', function (Blueprint $table) {
             $table->id();
             $table->enum('referencia_tipo', ['galeria', 'evento']);
-            $table->unsignedInteger('referencia_id');
             $table->string('caminho_thumb')->nullable();
             $table->string('caminho_foto')->nullable();
             $table->string('caminho_original')->nullable();
@@ -17,7 +16,7 @@ return new class extends Migration {
             $table->timestamp('criado_em')->useCurrent();
             $table->timestamp('atualizado_em')->useCurrent();
 
-            $table->index(['referencia_tipo', 'referencia_id'], 'idx_ref');
+            $table->index(['referencia_tipo'], 'idx_ref');
         });
     }
 

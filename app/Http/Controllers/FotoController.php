@@ -159,13 +159,13 @@ class FotoController extends Controller
                 // 🔧 Cria registro no banco
                 $foto = Foto::create([
                     'referencia_tipo' => $request->referencia_tipo,
-                    'galeria_id'   => $request->referencia_id,
+                    'galeria_id'   => $request->galeria_id,
                     'caminho_thumb'   => $thumbPath,
                     'caminho_foto'    => $fotoPath,
                     'caminho_original'=> $path,
                     'ativo'           => true,
                 ]);
-
+                
                 $fotosCriadas[] = $foto;
 
             } catch (\Exception $e) {

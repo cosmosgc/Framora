@@ -10,6 +10,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('categoria_id')->constrained('categorias');
             $table->foreignId('banner_id')->nullable()->constrained('banners')->cascadeOnUpdate()->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->cascadeOnUpdate()->nullOnDelete();
+            
             $table->string('nome')->nullable();
             $table->text('descricao')->nullable();
             $table->string('local')->nullable();

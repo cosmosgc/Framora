@@ -9,7 +9,7 @@ class Favorito extends Model
     protected $table = 'favoritos';
     public $timestamps = false;
 
-    protected $fillable = ['user_id', 'referencia_tipo', 'referencia_id'];
+    protected $fillable = ['user_id', 'referencia_tipo', 'galeria_id'];
 
     public function user()
     {
