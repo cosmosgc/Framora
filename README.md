@@ -126,5 +126,3 @@ Este projeto está sob a licença MIT
 
 
 ---
-
-Quer que eu já prepare também os **comandos para instalar Breeze e Pest** dentro do `README` (ex: `php artisan breeze:install blade`, `composer require pestphp/pest`), ou prefere deixar o guia mais limpo e só citar as tecnologias?
