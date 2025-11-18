@@ -1,3 +1,4 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/cosmosgc/Framora?utm_source=oss&utm_medium=github&utm_campaign=cosmosgc%2FFramora&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 # 📸 Framora
 
 **Framora** é uma aplicação desenvolvida em [Laravel](https://laravel.com) para venda e gestão de fotografias.  
