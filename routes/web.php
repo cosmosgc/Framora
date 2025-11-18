@@ -21,6 +21,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 // Galerias
 Route::get('/galerias', [WebViewsController::class, 'GaleriaIndex'])->name('galerias.web.index');
 Route::get('/galerias/{id}', [WebViewsController::class, 'GaleriaShow'])->name('galerias.web.show');
+Route::get('/galerias/{id}/edit', [WebViewsController::class, 'GaleriaEdit'])->name('galerias.web.edit');
 Route::get('/CriarGaleria', [WebViewsController::class, 'GaleriaCreate'])->name('galerias.web.create');
 
 // Fotos dentro da galeria

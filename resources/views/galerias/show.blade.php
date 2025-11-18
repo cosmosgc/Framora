@@ -2,7 +2,18 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-4">{{ $galeria->nome }}</h1>
+
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold">{{ $galeria->nome }}</h1>
+
+        {{-- Botão só para o dono da galeria --}}
+        @if(auth()->check() && $galeria->user_id == auth()->id())
+            <a href="{{ route('galerias.web.edit', $galeria->id) }}"
+               class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                Editar Galeria
+            </a>
+        @endif
+    </div>
 
     @if($galeria->categoria)
         <p class="text-gray-600 mb-2">

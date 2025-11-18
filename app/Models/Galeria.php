@@ -37,7 +37,9 @@ class Galeria extends Model
 
     public function fotos()
     {
-        return $this->hasMany(Foto::class, 'galeria_id');
+        return $this->hasMany(Foto::class, 'galeria_id')
+        ->orderBy('ordem')
+        ->orderBy('id'); // opcional, fallback;
     }
 
     public function user()

@@ -8,13 +8,21 @@ class Foto extends Model
 {
     protected $table = 'fotos';
     public $timestamps = false;
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'referencia_tipo', 'galeria_id',
-        'caminho_thumb', 'caminho_foto', 'caminho_original', 'ativo'
+        'referencia_tipo',
+        'caminho_thumb',
+        'caminho_foto',
+        'caminho_original',
+        'ativo',
+        'ordem',
     ];
 
-    protected $casts = ['ativo' => 'boolean'];
+    protected $casts = [
+        'ativo' => 'boolean',
+        'ordem' => 'integer',
+    ];
 
     public function destacada()
     {
@@ -43,5 +51,10 @@ class Foto extends Model
     public function getUrlOriginalAttribute()
     {
         return asset($this->caminho_original);
+    }
+    public function galeria()
+    {
+        // ajuste a chave caso sua FK seja diferente (ex: referencia_id)
+        return $this->belongsTo(Galeria::class, 'galeria_id');
     }
 }
