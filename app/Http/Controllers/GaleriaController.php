@@ -298,4 +298,30 @@ class GaleriaController extends Controller
             'message' => 'Galeria removida com sucesso.',
         ]);
     }
+        public function reorderFotos(Request $request, $galeriaId)
+    {
+        $ordered = $request->input('ordered_ids', []);
+        if (!is_array($ordered)) {
+            return response()->json(['success' => false, 'message' => 'ordered_ids inválido'], 400);
+        }
+
+        // inicia transação
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            foreach ($ordered as $index => $fotoId) {
+                // atualiza apenas fotos que pertencem à galeria e referencia_tipo = 'galeria'
+                \Illuminate\Support\Facades\DB::table('fotos')
+                    ->where('id', $fotoId)
+                    ->where('referencia_tipo', 'galeria')
+                    ->update(['ordem' => $index]);
+            }
+            \Illuminate\Support\Facades\DB::commit();
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Erro reordenar fotos: '.$e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro ao salvar ordem'], 500);
+        }
+    }
+
 }

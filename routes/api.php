@@ -45,6 +45,7 @@ Route::apiResource('galerias', GaleriaController::class);
 
 // ----------------- FOTOS -----------------
 Route::apiResource('fotos', FotoController::class);
+Route::post('/galerias/{galeria}/fotos/reorder', [GaleriaController::class, 'reorderFotos'])->name('galerias.fotos.reorder');
 
 // ----------------- FOTOS DESTACADAS -----------------
 Route::apiResource('fotos-destacadas', FotoDestacadaController::class);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Models\Galeria;
 use Illuminate\Http\Request;
 
 class WebViewsController extends Controller
@@ -32,6 +33,17 @@ class WebViewsController extends Controller
     {
         return view('galerias.create');
     }
+    public function GaleriaEdit($id)
+    {
+        $galeria = Galeria::findOrFail($id);
+
+        // Verify ownership
+        if (!auth()->check() || $galeria->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
+        return view('galerias.edit', compact('galeria'));
+    }
 
     public function FotosIndex()
     {
@@ -59,5 +71,7 @@ class WebViewsController extends Controller
 
         return view('categorias.show', compact('categoria'));
     }
+    
+    
 
 }

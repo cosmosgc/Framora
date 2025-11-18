@@ -45,11 +45,11 @@
         {{-- User Info --}}
         @if($galeria->user)
             <div class="flex items-center gap-3 mt-3 border-t border-gray-200 pt-3">
-                <!-- <img 
+                <img 
                     src="{{ asset($galeria->user->avatar ?? 'default-avatar.png') }}" 
                     alt="{{ $galeria->user->name }}" 
                     class="w-8 h-8 rounded-full object-cover"
-                > -->
+                >
                 <span class="text-sm text-gray-700 font-medium">
                     {{ $galeria->user->name }}
                 </span>
