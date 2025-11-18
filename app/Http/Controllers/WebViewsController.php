@@ -37,6 +37,11 @@ class WebViewsController extends Controller
     {
         $galeria = Galeria::findOrFail($id);
 
+        // Verify ownership
+        if (!auth()->check() || $galeria->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized');
+        }
+
         return view('galerias.edit', compact('galeria'));
     }
 
