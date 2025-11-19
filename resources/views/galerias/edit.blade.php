@@ -9,6 +9,7 @@
         @method('PUT')
 
         <input type="hidden" name="user_id" id="user_id_input" value="{{ auth()->id() ?? '' }}">
+        <input type="hidden" name="galeria_id" id="galeria_id_input" value="{{ $galeria->id ?? '' }}">
         <div class="mb-4">
             <label class="block font-semibold mb-1">Nome</label>
             <input type="text" name="nome" class="w-full border rounded px-3 py-2" value="{{ old('nome', $galeria->nome) }}" required>
@@ -37,127 +38,244 @@
 
     <p class="text-sm text-gray-600 mb-3">Arraste para alterar a ordem. A ordem será salva automaticamente ao soltar a foto.</p>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        <ul id="fotos-list" class="space-y-3 w-full">
-            @foreach($galeria->fotos()->where('referencia_tipo','galeria')->orderBy('ordem')->get() as $foto)
-                <li class="foto-item rounded-lg p-2 bg-gray-50 shadow-sm flex flex-col items-center" data-id="{{ $foto->id }}">
-                    <img src="{{  asset($foto->caminho_thumb) ?? asset($foto->caminho_foto) ?? asset($foto->caminho_original) }}" alt="Foto {{ $foto->id }}" class="w-full h-40 object-cover rounded mb-2">
-                    <div class="w-full flex items-center justify-between gap-2">
-                        <span class="text-sm text-gray-700">#{{ $foto->id }}</span>
-                        <form class="delete-foto-form" method="POST" action="{{ route('fotos.destroy', $foto->id) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="button" class="delete-foto-btn text-sm px-2 py-1 bg-red-500 text-white rounded">Excluir</button>
-                        </form>
-                    </div>
-                </li>
-            @endforeach
-        </ul>
+    <div id="fotos-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        @foreach($galeria->fotos()->where('referencia_tipo','galeria')->orderBy('ordem')->get() as $foto)
+            @include('galerias._foto_item', ['foto' => $foto])
+        @endforeach
     </div>
 </div>
 
 <!-- Sortable CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-Tu0h2J... (omitido) ..." crossorigin="anonymous"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const BASE_UPDATE_URL = "{{ route('galerias.update', $galeria->id) }}"; // atualiza metadados da galeria
-    const REORDER_URL = "{{ route('galerias.fotos.reorder', $galeria->id) }}"; // rota para reorder (veja sugestão no controller)
+    // URLs (geradas pelo Blade)
+    const BASE_UPDATE_URL = "{{ route('galerias.update', $galeria->id) }}";
+    const REORDER_URL = "{{ route('galerias.fotos.reorder', $galeria->id) }}";
+    const FOTOS_API_URL = "{{ url('/api/fotos') }}"; // ajuste para route('api.fotos.store') se tiver rota nomeada
+
+    // DOM references
     const STATUS_EL = document.getElementById('status');
     const form = document.getElementById('galeriaForm');
+    const grid = document.getElementById('fotos-grid');
+    const list = document.getElementById('fotos-list');
+    const container = grid || list;
+    const META_CSRF = document.querySelector('meta[name="csrf-token"]');
 
-    // Submete alterações da galeria (nome, descricao, novas fotos)
-    form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        STATUS_EL.innerHTML = 'Salvando...';
-        try {
-            const formData = new FormData(form);
-            // fetch usando a rota blade (usa URI correta do projeto)
-            const res = await fetch(BASE_UPDATE_URL, {
-                method: 'POST', // usamos POST por causa de _method=PUT no form
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: formData
-            });
-            const data = await res.json();
-            if (data.success ?? false) {
-                STATUS_EL.innerHTML = `<p class="text-green-600">Salvo com sucesso.</p>`;
-                // opcional: recarregar a página para carregar as novas fotos no list
-                // location.reload();
-            } else {
-                STATUS_EL.innerHTML = `<p class="text-red-600">Erro: ${data.message ?? 'Falha ao salvar'}</p>`;
-            }
-        } catch (err) {
-            console.error(err);
-            STATUS_EL.innerHTML = `<p class="text-red-600">Erro ao enviar.</p>`;
+    function getCsrfToken() {
+        return META_CSRF ? META_CSRF.getAttribute('content') : '';
+    }
+
+    function showStatus(html) { if (STATUS_EL) STATUS_EL.innerHTML = html; }
+    function clearStatus(delay = 1500) { if (!STATUS_EL) return; setTimeout(()=> { STATUS_EL.innerHTML = ''; }, delay); }
+
+    // Helper: cria o elemento .foto-item no DOM (mesmo HTML do partial)
+    function buildFotoItemHtml(foto) {
+        // foto: { id, caminho_thumb, caminho_foto, caminho_original }
+        const src = foto.caminho_thumb || foto.caminho_foto || foto.caminho_original || '';
+        const fotoDiv = document.createElement('div');
+        fotoDiv.className = 'foto-item rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative bg-white';
+        fotoDiv.setAttribute('data-id', foto.id);
+
+        fotoDiv.innerHTML = `
+            <a href="${foto.caminho_foto ? foto.caminho_foto : src}" target="_blank" class="block">
+                <img src="${src}" alt="Foto ${foto.id}" class="w-full h-40 object-cover">
+            </a>
+            <div class="p-2 flex items-center justify-between gap-2">
+                <span class="text-sm text-gray-700">#${foto.id}</span>
+                <form class="delete-foto-form" method="POST" action="${foto.destroy_route ?? ('/fotos/' + foto.id)}">
+                    <input type="hidden" name="_token" value="${getCsrfToken()}">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="button" class="delete-foto-btn text-sm px-2 py-1 bg-red-500 text-white rounded">Excluir</button>
+                </form>
+            </div>
+            <div class="absolute top-2 left-2 text-xs px-2 py-1 bg-black bg-opacity-50 text-white rounded">arrastar</div>
+        `;
+        return fotoDiv;
+    }
+
+    // Inicializa Sortable se estiver disponível (ou reusa existente)
+    function initSortable() {
+        if (!container) return;
+        if (typeof Sortable === 'undefined') {
+            console.warn('Sortable não encontrado. Importe o CDN.');
+            return;
         }
-    });
-
-    // Inicializa Sortable
-    const el = document.getElementById('fotos-list');
-    const sortable = Sortable.create(el, {
-        animation: 150,
-        ghostClass: 'opacity-50',
-        onEnd: async function (evt) {
-            // monta array com ids na nova ordem
-            const ids = Array.from(el.querySelectorAll('.foto-item')).map(li => li.getAttribute('data-id'));
-            // envia ao servidor
-            try {
-                STATUS_EL.innerHTML = 'Salvando ordem...';
-                const res = await fetch(REORDER_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ ordered_ids: ids })
-                });
-                const json = await res.json();
-                if (json.success ?? false) {
-                    STATUS_EL.innerHTML = `<p class="text-green-600">Ordem salva.</p>`;
-                } else {
-                    STATUS_EL.innerHTML = `<p class="text-red-600">Erro ao salvar ordem.</p>`;
+        // Se já existir uma instância em container._sortable, destrua? (Sortable.create retorna instância)
+        // Para simplicidade, criamos se não existir
+        if (!container._sortableInstance) {
+            container._sortableInstance = Sortable.create(container, {
+                animation: 150,
+                ghostClass: 'opacity-50',
+                draggable: '.foto-item',
+                onEnd: async function (evt) {
+                    const ids = Array.from(container.querySelectorAll('.foto-item')).map(el => el.getAttribute('data-id'));
+                    if (!ids.length) return;
+                    showStatus('Salvando ordem...');
+                    try {
+                        const res = await fetch(REORDER_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({ ordered_ids: ids })
+                        });
+                        const json = await res.json();
+                        if (json && (json.success === true || json.success === 'true')) {
+                            showStatus('<span style="color:green">Ordem salva.</span>');
+                        } else {
+                            showStatus('<span style="color:red">Erro ao salvar ordem.</span>');
+                            console.error('Reorder response', json);
+                        }
+                    } catch (err) {
+                        console.error('Erro ao salvar ordem', err);
+                        showStatus('<span style="color:red">Erro de rede ao salvar ordem.</span>');
+                    } finally {
+                        clearStatus(1200);
+                    }
                 }
-            } catch (err) {
-                console.error(err);
-                STATUS_EL.innerHTML = `<p class="text-red-600">Erro de rede.</p>`;
-            }
-            // limpa status após 2s
-            setTimeout(()=> STATUS_EL.innerHTML = '', 2000);
+            });
         }
-    });
+    }
 
-    // Delete foto (botão)
-    document.querySelectorAll('.delete-foto-btn').forEach(btn => {
-        btn.addEventListener('click', async function (e) {
-            const frm = e.target.closest('.delete-foto-form');
-            const action = frm.getAttribute('action');
+    // Delegated delete handler (funciona para itens existentes e adicionados dinamicamente)
+    function bindDeleteDelegate() {
+        if (!container) return;
+        container.addEventListener('click', async function (e) {
+            const btn = e.target.closest('.delete-foto-btn');
+            if (!btn) return;
+            const formEl = btn.closest('.delete-foto-form');
+            if (!formEl) { console.error('Form de delete não encontrado'); return; }
             if (!confirm('Deseja realmente excluir esta foto?')) return;
             try {
-                const res = await fetch(action, {
-                    method: 'POST', // _method=DELETE in form
+                const res = await fetch(formEl.getAttribute('action'), {
+                    method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-CSRF-TOKEN': getCsrfToken(),
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: new FormData(frm)
+                    body: new FormData(formEl)
                 });
                 const json = await res.json();
-                if (json.success ?? false) {
-                    // remove do DOM
-                    e.target.closest('.foto-item').remove();
+                if (json && (json.success === true || json.success === 'true')) {
+                    const item = btn.closest('.foto-item');
+                    if (item) {
+                        item.style.transition = 'opacity .25s, transform .25s';
+                        item.style.opacity = '0';
+                        item.style.transform = 'scale(.98)';
+                        setTimeout(()=> item.remove(), 260);
+                    }
                 } else {
-                    alert('Erro ao excluir');
+                    alert('Erro ao excluir foto.');
+                    console.error('Delete response', json);
                 }
             } catch (err) {
-                console.error(err);
-                alert('Erro ao excluir (rede)');
+                console.error('Erro de rede ao excluir foto', err);
+                alert('Erro de rede ao excluir foto.');
             }
         });
-    });
+    }
+
+    // ---------- Form submit (update galeria) + enviar fotos se houver ----------
+    if (form) {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            showStatus('Salvando...');
+            try {
+                const formData = new FormData(form);
+                const res = await fetch(BASE_UPDATE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': getCsrfToken()
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (data && (data.success === true || data.success === 'true')) {
+                    showStatus('<span style="color:green">Metadados salvos.</span>');
+
+                    // ---------- Step 2: enviar fotos (se houver) ----------
+                    const inputFotos = form.querySelector('input[name="fotos[]"]');
+                    const files = inputFotos ? Array.from(inputFotos.files) : [];
+
+                    // Determine galeriaId: prefer value from server (data.galeria_id), fallback to Blade var (JSON-encoded)
+                    let galeriaId = (data && data.galeria_id !== undefined && data.galeria_id !== null) ? data.galeria_id : @json($galeria->id);
+                    // if galeriaId is null/undefined and Blade var is defined (non-null), use Blade var
+                    if ((galeriaId === null || galeriaId === undefined) && @json($galeria->id) !== null) {
+                        galeriaId = @json($galeria->id);
+                    }
+
+                    if (files.length > 0) {
+                        showStatus('Enviando fotos...');
+                        const fotosForm = new FormData();
+                        for (const file of files) fotosForm.append('fotos[]', file);
+                        fotosForm.append('referencia_tipo', 'galeria');
+                        // use galeria_id (ou galeria_id) conforme sua API
+                        fotosForm.append('galeria_id', galeriaId);
+
+                        // envia para API (ajuste URL se necessário)
+                        const fotosRes = await fetch(FOTOS_API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                                // NOT setting Content-Type; browser sets boundary for FormData
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: fotosForm
+                        });
+
+                        const fotosData = await fotosRes.json();
+
+                        if (!fotosData || !(fotosData.success === true || fotosData.success === 'true')) {
+                            showStatus('<span style="color:orange">Galeria salva, mas erro ao enviar fotos.</span>');
+                            console.error('Fotos upload response', fotosData);
+                            // opcional: fallback reload
+                            // location.reload();
+                            return;
+                        }
+
+                        // Se a API retornar um array de fotos, inserimos no DOM
+                        if (Array.isArray(fotosData.fotos) && fotosData.fotos.length) {
+                            for (const foto of fotosData.fotos) {
+                                // Se o endpoint não retornar a rota de delete, construímos uma padrão (ajuste se necessário)
+                                if (!foto.destroy_route) {
+                                    foto.destroy_route = "{{ url('/fotos') }}/" + foto.id;
+                                }
+                                const node = buildFotoItemHtml(foto);
+                                container.appendChild(node);
+                            }
+                            // re-init sortable (ou garante que a instância reconheça os novos filhos)
+                            initSortable();
+                            showStatus('<span style="color:green">Fotos enviadas.</span>');
+                        } else {
+                            // fallback: recarregar para garantir estado
+                            showStatus('Fotos enviadas (recarregando)...');
+                            // setTimeout(()=> location.reload(), 900);
+                        }
+                    } else {
+                        // sem fotos — apenas sucesso normal
+                        showStatus('<span style="color:green">Salvo.</span>');
+                    }
+                } else {
+                    const msg = data?.message ?? 'Falha ao salvar';
+                    showStatus(`<span style="color:red">Erro: ${msg}</span>`);
+                }
+            } catch (err) {
+                console.error('Erro ao enviar form', err);
+                showStatus('<span style="color:red">Erro ao enviar.</span>');
+            } finally {
+                clearStatus(2000);
+            }
+        });
+    }
+
+    // Init sortable + delete delegation
+    initSortable();
+    bindDeleteDelegate();
 });
 </script>
 @endsection
