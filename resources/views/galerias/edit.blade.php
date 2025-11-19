@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         } else {
                             // fallback: recarregar para garantir estado
                             showStatus('Fotos enviadas (recarregando)...');
-                            // setTimeout(()=> location.reload(), 900);
+                            setTimeout(()=> location.reload(), 900);
                         }
                     } else {
                         // sem fotos — apenas sucesso normal
