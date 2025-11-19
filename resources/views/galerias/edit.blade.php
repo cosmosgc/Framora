@@ -326,8 +326,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
 
                         // Se a API retornar um array de fotos, inserimos no DOM
-                        if (Array.isArray(fotosData.fotos) && fotosData.fotos.length) {
-                            for (const foto of fotosData.fotos) {
+                        if (Array.isArray(fotosData.data) && fotosData.data.length) {
+                            for (const foto of fotosData.data) {
                                 // Se o endpoint não retornar a rota de delete, construímos uma padrão (ajuste se necessário)
                                 if (!foto.destroy_route) {
                                     foto.destroy_route = "{{ url('/fotos') }}/" + foto.id;
