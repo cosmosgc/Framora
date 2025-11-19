@@ -192,7 +192,6 @@ class GaleriaController extends Controller
         }
 
         $categorias = Categoria::select('id', 'nome')->get();
-        dd($categorias);
         $banners = Banner::select('id','caminho')->get(); 
         return response()->json([
             'success' => true,
