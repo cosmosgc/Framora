@@ -290,11 +290,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     const files = inputFotos ? Array.from(inputFotos.files) : [];
 
                     // Determine galeriaId: prefer value from server (data.galeria_id), fallback to Blade var (JSON-encoded)
-                    let galeriaId = (data && data.galeria_id !== undefined && data.galeria_id !== null) ? data.galeria_id : @json($galeria->id);
-                    // if galeriaId is null/undefined and Blade var is defined (non-null), use Blade var
-                    if ((galeriaId === null || galeriaId === undefined) && @json($galeria->id) !== null) {
-                        galeriaId = @json($galeria->id);
-                    }
+                    // Determine galeriaId: prefer server response, fallback to page context
+                    const galeriaId = data?.galeria_id ?? @json($galeria->id);
 
                     if (files.length > 0) {
                         showStatus('Enviando fotos...');
