@@ -5,32 +5,119 @@
     <h1 class="text-2xl font-bold mb-4">Editar Galeria — {{ $galeria->nome ?? '—' }}</h1>
 
     <form id="galeriaForm" enctype="multipart/form-data">
-        @csrf
-        @method('PUT')
+    @csrf
+    @method('PUT')
 
-        <input type="hidden" name="user_id" id="user_id_input" value="{{ auth()->id() ?? '' }}">
-        <input type="hidden" name="galeria_id" id="galeria_id_input" value="{{ $galeria->id ?? '' }}">
-        <div class="mb-4">
-            <label class="block font-semibold mb-1">Nome</label>
-            <input type="text" name="nome" class="w-full border rounded px-3 py-2" value="{{ old('nome', $galeria->nome) }}" required>
-        </div>
+    <input type="hidden" name="user_id" value="{{ auth()->id() }}">
+    <input type="hidden" name="galeria_id" value="{{ $galeria->id }}">
 
-        <div class="mb-4">
-            <label class="block font-semibold mb-1">Descrição</label>
-            <textarea name="descricao" class="w-full border rounded px-3 py-2">{{ old('descricao', $galeria->descricao) }}</textarea>
-        </div>
+    {{-- Nome --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Nome</label>
+        <input type="text"
+               name="nome"
+               class="w-full border rounded px-3 py-2"
+               value="{{ old('nome', $galeria->nome) }}"
+               required>
+    </div>
 
-        <div class="mb-4">
-            <label class="block font-semibold mb-1">Adicionar Fotos</label>
-            <input type="file" name="fotos[]" multiple accept="image/*">
-            <p class="text-sm text-gray-600 mt-1">As novas fotos serão adicionadas ao final. Você pode ordenar manualmente as fotos abaixo.</p>
-        </div>
+    {{-- Descrição --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Descrição</label>
+        <textarea name="descricao"
+                  class="w-full border rounded px-3 py-2"
+                  rows="3">{{ old('descricao', $galeria->descricao) }}</textarea>
+    </div>
 
-        <div class="flex items-center gap-3">
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Salvar alterações</button>
-            <div id="status"></div>
-        </div>
-    </form>
+    {{-- Categoria --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Categoria</label>
+
+        <select name="categoria_id"
+                class="w-full border rounded px-3 py-2">
+            <option value="">Selecione...</option>
+            @foreach($categorias as $cat)
+                <option value="{{ $cat->id }}"
+                        {{ $galeria->categoria_id == $cat->id ? 'selected' : '' }}>
+                    {{ $cat->nome }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    {{-- Banner (select) --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Banner</label>
+        <select name="banner_id" class="w-full border rounded px-3 py-2">
+            <option value="">Nenhum</option>
+            @foreach($banners as $banner)
+                <option value="{{ $banner->id }}"
+                    {{ $galeria->banner_id == $banner->id ? 'selected' : '' }}>
+                    Banner #{{ $banner->id }}
+                </option>
+            @endforeach
+        </select>
+        <p class="text-sm text-gray-600 mt-1">Se quiser, posso trocar isso por upload de imagem.</p>
+    </div>
+
+    {{-- Local --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Local</label>
+        <input type="text"
+               name="local"
+               class="w-full border rounded px-3 py-2"
+               value="{{ old('local', $galeria->local) }}">
+    </div>
+
+    {{-- Data --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Data</label>
+        <input type="date"
+               name="data"
+               class="w-full border rounded px-3 py-2"
+               value="{{ old('data', $galeria->data) }}">
+    </div>
+
+    {{-- Tempo de duração --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Tempo de duração</label>
+        <input type="text"
+               name="tempo_duracao"
+               class="w-full border rounded px-3 py-2"
+               value="{{ old('tempo_duracao', $galeria->tempo_duracao) }}"
+               placeholder="Ex: 2h, 3 horas, 45min">
+    </div>
+
+    {{-- Valor por foto --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Valor da Foto (R$)</label>
+        <input type="number"
+               step="0.01"
+               name="valor_foto"
+               class="w-full border rounded px-3 py-2"
+               value="{{ old('valor_foto', $galeria->valor_foto) }}">
+    </div>
+
+    {{-- Upload de fotos --}}
+    <div class="mb-4">
+        <label class="block font-semibold mb-1">Adicionar Fotos</label>
+        <input type="file" name="fotos[]" multiple accept="image/*">
+        <p class="text-sm text-gray-600 mt-1">
+            As novas fotos serão adicionadas ao final.  
+            Você pode ordenar manualmente as fotos abaixo.
+        </p>
+    </div>
+
+    {{-- Submit --}}
+    <div class="flex items-center gap-3">
+        <button type="submit"
+                class="px-4 py-2 bg-blue-600 text-white rounded">
+            Salvar alterações
+        </button>
+        <div id="status"></div>
+    </div>
+</form>
+
 
     <hr class="my-6">
 
