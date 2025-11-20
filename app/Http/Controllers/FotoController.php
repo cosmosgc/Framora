@@ -177,6 +177,8 @@ class FotoController extends Controller
             'success' => true,
             'message' => count($fotosCriadas) . ' foto(s) enviada(s) com sucesso.',
             'data'    => $fotosCriadas,
+            'galeria_id' => $request->galeria_id,
+            'foto'
         ], 201);
     }
 

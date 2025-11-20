@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Galeria;
 use App\Models\Categoria;
+use app\Models\Banner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -191,11 +192,12 @@ class GaleriaController extends Controller
         }
 
         $categorias = Categoria::select('id', 'nome')->get();
-
+        $banners = Banner::select('id','caminho')->get(); 
         return response()->json([
             'success' => true,
             'data'    => $galeria,
             'categorias' => $categorias,
+            'banners' => $banners,
             'message' => 'Use PUT /api/galerias/{id} para atualizar esta galeria.'
         ]);
     }

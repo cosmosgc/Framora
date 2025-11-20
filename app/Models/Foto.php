@@ -11,6 +11,7 @@ class Foto extends Model
     protected $primaryKey = 'id';
 
     protected $fillable = [
+        'galeria_id',
         'referencia_tipo',
         'caminho_thumb',
         'caminho_foto',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Categoria;
 use App\Models\Galeria;
+use App\Models\Banner;
 use Illuminate\Http\Request;
 
 class WebViewsController extends Controller
@@ -42,7 +43,10 @@ class WebViewsController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return view('galerias.edit', compact('galeria'));
+        $categorias = Categoria::select('id','nome')->get();
+        $banners = Banner::select('id','imagem')->get(); // ou como está sua tabela
+
+        return view('galerias.edit', compact('galeria','categorias','banners'));
     }
 
     public function FotosIndex()
