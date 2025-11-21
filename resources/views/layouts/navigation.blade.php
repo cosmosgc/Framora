@@ -56,6 +56,12 @@
                             <span>{{ __('Inventário') }}</span>
                         </div>
                     </x-nav-link>
+                    <x-nav-link :href="route('updates.index')" :active="request()->routeIs('updates.*')">
+                        <div class="flex items-center gap-1.5">
+                            <x-heroicon-s-archive-box class="w-4 h-4" />
+                            <span>{{ __('Updates') }}</span>
+                        </div>
+                    </x-nav-link>
 
                     <x-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.*')">
                         <div class="flex items-center gap-1.5">

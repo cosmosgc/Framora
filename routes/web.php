@@ -10,6 +10,7 @@ use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\FavoritoController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\AtualizacoesController;
 
 use App\Http\Controllers\WebViewsController;
 
@@ -66,5 +67,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/updates', action: [AtualizacoesController::class, 'index'])->name('updates.index');
+Route::get('/updates/update', [AtualizacoesController::class, 'update'])->name('updates.update');
+
 
 require __DIR__.'/auth.php';
