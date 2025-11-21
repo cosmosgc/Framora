@@ -36,10 +36,10 @@
                         </div>
                     </x-nav-link>
 
-                    <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')">
+                    <x-nav-link :href="route('pedidos.web.index')" :active="request()->routeIs('carrinho.*')">
                         <div class="flex items-center gap-1.5">
                             <x-heroicon-s-shopping-cart class="w-4 h-4" />
-                            <span>{{ __('Carrinho') }}</span>
+                            <span>{{ __('Pedidos') }}</span>
                         </div>
                     </x-nav-link>
 
@@ -50,7 +50,7 @@
                         </div>
                     </x-nav-link>
 
-                    <x-nav-link :href="route('inventario.index')" :active="request()->routeIs('inventario.*')">
+                    <x-nav-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')">
                         <div class="flex items-center gap-1.5">
                             <x-heroicon-s-archive-box class="w-4 h-4" />
                             <span>{{ __('Inventário') }}</span>
@@ -61,6 +61,13 @@
                         <div class="flex items-center gap-1.5">
                             <x-heroicon-s-user class="w-4 h-4" />
                             <span>{{ __('Perfil') }}</span>
+                        </div>
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('galerias.web.create')" :active="request()->routeIs('galerias.web.create')">
+                        <div class="flex items-center gap-1.5">
+                            <x-heroicon-m-folder-plus class="w-4 h-4" />
+                            <span>{{ __('Nova Galeria') }}</span>
                         </div>
                     </x-nav-link>
                 </div>

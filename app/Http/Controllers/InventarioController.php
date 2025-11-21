@@ -2,63 +2,79 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use App\Models\Inventario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InventarioController extends Controller
 {
+    // public function __construct() { $this->middleware('auth:sanctum'); }
+
     /**
-     * Display a listing of the resource.
+     * GET /api/inventario
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $query = Inventario::query()->with('user', 'foto', 'pedido');
+
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->query('user_id'));
+        }
+
+        $perPage = (int) $request->query('per_page', 15);
+        return response()->json($query->paginate($perPage));
     }
 
     /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * POST /api/inventario
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'foto_id' => ['required', 'integer', 'exists:fotos,id'],
+            'pedido_id' => ['nullable', 'integer', 'exists:pedidos,id'],
+        ]);
+
+        $data['user_id'] = $data['user_id'] ?? Auth::id();
+
+        $inventario = Inventario::create($data);
+
+        return response()->json(['message' => 'Inventário criado', 'data' => $inventario], 201);
     }
 
     /**
-     * Display the specified resource.
+     * GET /api/inventario/{inventario}
      */
-    public function show(string $id)
+    public function show(Inventario $inventario)
     {
-        //
+        $inventario->load('user', 'foto', 'pedido');
+        return response()->json($inventario);
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * PUT/PATCH /api/inventario/{inventario}
      */
-    public function edit(string $id)
+    public function update(Request $request, Inventario $inventario)
     {
-        //
+        $data = $request->validate([
+            'foto_id' => ['sometimes', 'integer', 'exists:fotos,id'],
+            'pedido_id' => ['sometimes', 'nullable', 'integer', 'exists:pedidos,id'],
+            'user_id' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        $inventario->update($data);
+
+        return response()->json(['message' => 'Inventário atualizado', 'data' => $inventario]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * DELETE /api/inventario/{inventario}
      */
-    public function update(Request $request, string $id)
+    public function destroy(Inventario $inventario)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $inventario->delete();
+        return response()->json(['message' => 'Registro de inventário removido']);
     }
 }
