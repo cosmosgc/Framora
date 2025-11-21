@@ -13,7 +13,7 @@
 <div id="pedidos-list">
   <div class="text-muted">Carregando pedidos...</div>
 </div>
-@endsection
+
 
 <script>
 const apiBase = "{{ url('/api') }}";
@@ -89,3 +89,5 @@ function showAlert(type, text) {
 
 document.addEventListener('DOMContentLoaded', loadPedidos);
 </script>
+
+@endsection

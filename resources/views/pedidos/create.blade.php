@@ -35,7 +35,7 @@
     Pagar com Stripe (desabilitado - a implementar)
   </button>
 </form>
-@endsection
+
 
 <script>
 const apiBase = "{{ url('/api') }}";
@@ -80,3 +80,4 @@ function showAlert(type, text) {
   setTimeout(()=> ph.innerHTML = '', 5000);
 }
 </script>
+@endsection

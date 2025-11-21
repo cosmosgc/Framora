@@ -12,7 +12,7 @@
 </div>
 
 <a href="{{ route('inventario.index') }}" class="btn btn-link mt-3">Voltar</a>
-@endsection
+
 
 <script>
 
@@ -43,3 +43,4 @@ async function loadDetail() {
 
 document.addEventListener('DOMContentLoaded', loadDetail);
 </script>
+@endsection

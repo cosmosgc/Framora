@@ -10,7 +10,6 @@
 <div id="inventario-list">
   <div class="text-muted">Carregando inventário...</div>
 </div>
-@endsection
 
 <script>
 const apiBase = "{{ url('/api') }}";
@@ -75,3 +74,4 @@ function showAlert(type, text) {
 
 document.addEventListener('DOMContentLoaded', loadInventario);
 </script>
+@endsection
