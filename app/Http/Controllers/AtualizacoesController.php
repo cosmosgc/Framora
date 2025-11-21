@@ -106,7 +106,7 @@ class AtualizacoesController extends Controller
         } catch (\Throwable $e) {
             // se falhar aqui, não quebra a exibição
         }
-
+        // dd($prs);
         return view('atualizacoes.index', compact('items', 'commits', 'prs'));
     }
 
@@ -181,7 +181,7 @@ class AtualizacoesController extends Controller
 
         try {
             $commitsResp = $client->get("https://api.github.com/repos/{$this->repo}/commits");
-            $prsResp = $client->get("https://api.github.com/repos/{$this->repo}/pulls");
+            $prsResp = $client->get("https://api.github.com/repos/{$this->repo}/pulls?state=all");
 
             // opcional: checar status
             if ($commitsResp->ok()) {

@@ -36,12 +36,38 @@
             'head_ref' => data_get($p,'head.ref'),
             'changed_files' => data_get($p,'changed_files'),
             'commits' => data_get($p,'commits'),
+            'merged_at' => data_get($p,'merged_at'),
           ];
         });
+        // helper to decide if pr is merged
+        $isMerged = function($x) {
+            // prefer explicit 'merged' boolean if present
+            if (array_key_exists('meta', $x) && array_key_exists('merged', $x['meta']) && $x['meta']['merged'] === true) {
+                return true;
+            }
 
-        $openPRs = $prCollection->filter(fn($x)=> ($x['merged'] !== true) && ($x['state'] === 'open'))->values();
-        $mergedPRs = $prCollection->filter(fn($x)=> $x['merged'] === true)->values();
-        $closedPRs = $prCollection->filter(fn($x)=> ($x['state'] === 'closed' && $x['merged'] !== true))->values();
+            // fallback to merged_at if available
+            if (array_key_exists('merged_at', $x) && !empty($x['merged_at'])) {
+                return true;
+            }
+
+            // final fallback: sometimes merged info is nested or missing — treat as not merged
+            return false;
+        };
+
+        // open: state === 'open'
+        $openPRs = $prCollection->filter(fn($x) => (data_get($x, 'state') === 'open'))->values();
+
+        // merged: either meta.merged === true OR merged_at not null
+        $mergedPRs = $prCollection->filter(function($x) use ($isMerged) {
+            return $isMerged($x);
+        })->values();
+
+        // closed (not merged): state === 'closed' AND NOT merged
+        $closedPRs = $prCollection->filter(function($x) use ($isMerged) {
+            return data_get($x, 'meta.state') === 'closed' && ! $isMerged($x);
+        })->values();
+
       @endphp
 
       <div class="mt-4 space-y-3">
