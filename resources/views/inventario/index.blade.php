@@ -13,6 +13,7 @@
 
 <script>
 const apiBase = "{{ url('/api') }}";
+const baseURL = "{{ url('/') }}";
 
 
 async function loadInventario() {
@@ -27,13 +28,14 @@ async function loadInventario() {
       container.innerHTML = '<div class="alert alert-info">Inventário vazio.</div>';
       return;
     }
-
+    console.log(data.data);
     const cards = data.data.map(i => `
       <div class="card mb-3">
         <div class="card-body d-flex justify-content-between">
           <div>
             <h5>Item #${i.id}</h5>
             <div class="small text-muted">Foto: ${i.foto_id ?? '-'}</div>
+            <img src="${baseURL}/${i.foto.caminho_original}" alt="Foto ${i.foto.caminho_original}" style="max-height:100px;">
             <div class="small text-muted">Pedido: ${i.pedido_id ?? '—'}</div>
           </div>
           <div class="text-end">
