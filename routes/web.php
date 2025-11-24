@@ -32,13 +32,13 @@ Route::get('/galerias/{id}/fotos', [WebViewsController::class, 'FotosIndex'])->n
 Route::get('/galerias/{id}/fotos/{foto}', [WebViewsController::class, 'FotosShow'])->name('fotos.web.show');
 
 // Carrinho: visualizar e adicionar fotos
-// Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
-// Route::post('/carrinho/adicionar', [CarrinhoController::class, 'store'])->name('carrinho.store');
-// Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])->name('carrinho.destroy');
+Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
+Route::post('/carrinho/adicionar', [CarrinhoController::class, 'store'])->name('carrinho.store');
+Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])->name('carrinho.destroy');
 
 Route::get('/pedidos', function () { return view('pedidos.index'); })->name('pedidos.web.index');
 Route::get('/pedidos/criar', function () { return view('pedidos.create'); })->name('pedidos.web.create');
-Route::get('/inventario', function () { return view('inventario.index'); })->name('inventario.web.index');
+Route::get('/inventario', [WebViewsController::class, 'inventarioIndex'])->name('inventario.web.index');
 Route::get('/inventario/{id}', function ($id) { return view('inventario.show', ['id' => $id]); })->name('inventario.web.show');
 
 // Inventário: acessar fotos compradas

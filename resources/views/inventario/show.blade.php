@@ -11,13 +11,13 @@
   <div class="text-muted">Carregando...</div>
 </div>
 
-<a href="{{ route('inventario.index') }}" class="btn btn-link mt-3">Voltar</a>
+<a href="{{ route('inventario.web.index') }}" class="btn btn-link mt-3">Voltar</a>
 
 
 <script>
 
 const apiBase = "{{ url('/api') }}";
-const id = {{ json_encode($id) }};
+const id = {{ $id }};
 
 async function loadDetail() {
   const c = document.getElementById('inventario-detail');
