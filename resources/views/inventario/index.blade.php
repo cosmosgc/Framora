@@ -199,22 +199,65 @@ function rebuildGroupedView(items) {
   }
 
   Object.entries(grouped).forEach(([gal, list]) => {
-    const section = document.createElement('section');
-    section.className = 'mb-6';
-    section.innerHTML = `
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold">${escapeHtml(gal)}</h3>
-        <div class="text-xs text-gray-500">${list.length} itens</div>
-      </div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
-    `;
-    const grid = section.querySelector('div.grid');
-    list.forEach(item => {
-      const el = buildCardHtml(item);
-      grid.insertAdjacentHTML('beforeend', el);
-    });
-    container.appendChild(section);
+  // cria section com classes do blade
+  const section = document.createElement('section');
+  section.className = 'mb-6 rounded-md shadow-sm overflow-hidden';
+
+  // tenta extrair banner da primeira foto do grupo (se existir)
+  let bannerPath = null;
+  if (Array.isArray(list) && list.length > 0) {
+    const firstFoto = list[0].foto || null;
+    if (firstFoto && firstFoto.banner && (firstFoto.banner.imagem || firstFoto.banner.imagem === '')) {
+      bannerPath = firstFoto.banner.imagem || null;
+    }
+  }
+
+  if (bannerPath) {
+    // monta url segura (escape simples)
+    const bannerUrl = baseURL.replace(/\/+$/, '') + '/' + bannerPath.replace(/^\/+/, '');
+    section.style.backgroundImage = `url("${escapeAttr(bannerUrl)}")`;
+    section.style.backgroundSize = 'cover';
+    section.style.backgroundPosition = 'center';
+  }
+
+  // cria overlay que aplica o glass blur (backdrop-filter age sobre o que está atrás do overlay)
+  const overlay = document.createElement('div');
+  // classes semelhantes ao Blade: rounded-md p-3 border border-gray-100 bg-clip-padding backdrop-blur-sm bg-opacity-10
+  overlay.className = 'rounded-md p-3 border border-gray-100 bg-clip-padding';
+  // inline styles para garantir suporte cross-browser e cor semitransparente
+  overlay.style.backgroundColor = 'rgba(255,255,255,0.08)'; // ajuste se quiser mais claro/escuro
+  overlay.style.webkitBackdropFilter = 'blur(6px)';
+  overlay.style.backdropFilter = 'blur(6px)';
+
+  // header
+  const header = document.createElement('div');
+  header.className = 'flex items-center justify-between mb-3';
+  header.innerHTML = `
+    <h3 class="text-sm font-semibold text-gray-900">${escapeHtml(gal)}</h3>
+    <div class="text-xs text-gray-600">${list.length} itens</div>
+  `;
+
+  // grid container
+  const grid = document.createElement('div');
+  grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3';
+
+  // popular grid com os cards (buildCardHtml deve retornar HTML do card)
+  list.forEach(item => {
+    const elHtml = buildCardHtml(item);
+    // inserir cada card dentro de um wrapper (semântica igual ao blade col)
+    const wrapper = document.createElement('div');
+    wrapper.className = ''; // já usamos grid, cada child é o próprio card (Tailwind grid lida com col)
+    wrapper.innerHTML = elHtml;
+    grid.appendChild(wrapper);
   });
+
+  // montar estrutura
+  overlay.appendChild(header);
+  overlay.appendChild(grid);
+  section.appendChild(overlay);
+  container.appendChild(section);
+});
+
 
   // Reattach handlers for newly created DOM images
   attachImageOpenHandlers();
