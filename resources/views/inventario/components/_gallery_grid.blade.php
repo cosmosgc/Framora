@@ -8,7 +8,7 @@
     <div class="text-xs text-gray-500">{{ count($items) }} itens</div>
   </div>
 
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 m-3 p-3 bg-gray-400 rounded-md bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-30 border border-gray-100">
     @foreach($items as $item)
       @include('inventario.components._item_card', ['item' => $item, 'baseURL' => $baseURL])
     @endforeach
