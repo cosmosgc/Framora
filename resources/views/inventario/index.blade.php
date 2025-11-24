@@ -43,7 +43,7 @@
   @else
     @php $baseURL = url('/'); @endphp
     @foreach($grouped as $gal => $items)
-      @include('inventario.components._gallery_grid', ['galeriaName' => $gal, 'items' => $items, 'baseURL' => $baseURL])
+      @include('inventario.components._gallery_grid', ['galeriaName' => $gal, 'items' => $items, 'baseURL' => $baseURL, 'banner' => $items->banner ?? null])
     @endforeach
   @endif
 </div>
@@ -278,7 +278,6 @@ function showModalForIndex(idx) {
   img.dataset.currentIndex = idx;
   document.getElementById('galleryMeta').innerText = `ID ${item.id} • Foto ${item.foto_id} • Pedido ${item.pedido_id ?? '—'} • Status: ${item.pedido?.status_pedido ?? '—'}`;
   document.getElementById('galleryPos').innerText = `${idx + 1} / ${RAW_ITEMS.length}`;
-  console.log('Showing item', idx, item);
   const naoPago = item.pedido.status_pedido !== 'pago';
   if(naoPago){
     document.getElementById('zoomToggle').classList.add('hidden');

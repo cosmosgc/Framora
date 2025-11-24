@@ -27,7 +27,6 @@ class WebViewsController extends Controller
         if (!$galeria) {
             abort(404, 'Galeria não encontrada');
         }
-        // dd($galeria);
         return view('galerias.show', compact('galeria'));
     }
 
@@ -80,8 +79,15 @@ class WebViewsController extends Controller
     {
         $perPage = $request->query('per_page', null); // if null, get all (careful with huge sets)
         $order = $request->query('order', 'newest');
+        $galeriasData = [];
+        // obtain the authenticated user's id safely (avoids static analysis complaining about auth()->id())
+        $userId = auth()->id();
+        if (!$userId) {
+            abort(403, 'Unauthorized');
+        }
 
         $query = Inventario::with(['foto', 'pedido'])
+            ->where('user_id', $userId)
             ->when($order === 'oldest', fn($q)=> $q->orderBy('adquirido_em', 'asc'), fn($q)=> $q->orderBy('adquirido_em', 'desc'));
 
         // se quer paginação ativar:
@@ -121,15 +127,32 @@ class WebViewsController extends Controller
                 }
             }
 
+            // === Adiciona banner ao objeto foto (se possível) antes de agrupar ===
+            try {
+                if ($foto && isset($foto->galeria) && is_object($foto->galeria) && method_exists($foto->galeria, 'banner')) {
+                    // busca apenas id e imagem (conforme sua sugestão)
+                    $bannerModel = $foto->galeria->banner()->first(['id', 'imagem']);
+                    // anexa ao objeto foto para uso posterior (view / itemsJson)
+                    $item->foto->banner = $bannerModel ?: null;
+                } else {
+                    $item->foto->banner = null;
+                }
+            } catch (\Throwable $e) {
+                // segurança: se qualquer erro, garantir que banner seja nulo
+                if ($foto) $item->foto->banner = null;
+            }
+
+            // agrupa
             $grouped[$galName][] = $item;
             $galeriasLookup[$galName] = true;
         }
 
+        
         // passar tanto o grouped para render server-side quanto o raw JSON para filtros client-side leves
         return view('inventario.index', [
             'grouped' => $grouped,
             'galerias' => array_keys($galeriasLookup),
-            'itemsJson' => json_encode($itemsCollection->map(function($it){
+            'itemsJson' => json_encode($itemsCollection->map(function($it) use ($galeriasData){
                 // transformar em array serializável apenas com o que precisamos no cliente
                 return [
                     'id' => $it->id,
@@ -144,6 +167,7 @@ class WebViewsController extends Controller
                         // passe minimal galeria info
                         'galeria' => is_string($it->foto->galeria) ? $it->foto->galeria : ($it->foto->galeria->nome ?? $it->foto->galeria_nome ?? null),
                         'created_at' => $it->foto->created_at?->toDateTimeString() ?? null,
+                        'banner' => $it->foto->galeria && is_object($it->foto->galeria) && method_exists($it->foto->galeria, 'banner') ? $it->foto->galeria->banner()->first(['id','imagem']) : null,
                     ] : null,
                     'pedido' => $it->pedido ? [
                         'status_pedido' => $it->pedido->status_pedido ?? null,

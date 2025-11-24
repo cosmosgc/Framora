@@ -38,8 +38,12 @@ Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])-
 
 Route::get('/pedidos', function () { return view('pedidos.index'); })->name('pedidos.web.index');
 Route::get('/pedidos/criar', function () { return view('pedidos.create'); })->name('pedidos.web.create');
-Route::get('/inventario', [WebViewsController::class, 'inventarioIndex'])->name('inventario.web.index');
-Route::get('/inventario/{id}', function ($id) { return view('inventario.show', ['id' => $id]); })->name('inventario.web.show');
+Route::get('/inventario', [WebViewsController::class, 'inventarioIndex'])
+    ->middleware('auth')
+    ->name('inventario.web.index');
+Route::get('/inventario/{id}', function ($id) { return view('inventario.show', ['id' => $id]); })
+    ->middleware('auth')
+    ->name('inventario.web.show');
 
 // Inventário: acessar fotos compradas
 // Route::get('/inventario', [InventarioController::class, 'index'])->name('inventario.index');
