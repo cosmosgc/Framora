@@ -10,6 +10,7 @@ use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\FavoritoController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\AtualizacoesController;
 
 use App\Http\Controllers\WebViewsController;
 
@@ -35,9 +36,18 @@ Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.in
 Route::post('/carrinho/adicionar', [CarrinhoController::class, 'store'])->name('carrinho.store');
 Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])->name('carrinho.destroy');
 
+Route::get('/pedidos', function () { return view('pedidos.index'); })->name('pedidos.web.index');
+Route::get('/pedidos/criar', function () { return view('pedidos.create'); })->name('pedidos.web.create');
+Route::get('/inventario', [WebViewsController::class, 'inventarioIndex'])
+    ->middleware('auth')
+    ->name('inventario.web.index');
+Route::get('/inventario/{id}', function ($id) { return view('inventario.show', ['id' => $id]); })
+    ->middleware('auth')
+    ->name('inventario.web.show');
+
 // Inventário: acessar fotos compradas
-Route::get('/inventario', [InventarioController::class, 'index'])->name('inventario.index');
-Route::get('/inventario/{id}', [InventarioController::class, 'show'])->name('inventario.show');
+// Route::get('/inventario', [InventarioController::class, 'index'])->name('inventario.index');
+// Route::get('/inventario/{id}', [InventarioController::class, 'show'])->name('inventario.show');
 
 // Favoritos: salvar e listar favoritos
 Route::get('/favoritos', [FavoritoController::class, 'index'])->name('favoritos.index');
@@ -61,5 +71,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::get('/updates', action: [AtualizacoesController::class, 'index'])->name('updates.index');
+Route::get('/updates/update', [AtualizacoesController::class, 'update'])->name('updates.update');
+
 
 require __DIR__.'/auth.php';
