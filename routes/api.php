@@ -61,6 +61,8 @@ Route::post('/carrinhos/{id}/fotos', [CarrinhoController::class, 'addFoto']);
 Route::put('/carrinhos/{id}/fotos/{fid}', [CarrinhoController::class, 'updateFoto']);
 Route::delete('/carrinhos/{id}/fotos/{fid}', [CarrinhoController::class, 'removeFoto']);
 
+Route::post('/carrinhos/{id}/checkout', [CarrinhoController::class, 'apiCheckout']);
+
 // ----------------- PEDIDOS -----------------
 Route::apiResource('pedidos', PedidoController::class);
 

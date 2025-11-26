@@ -36,8 +36,12 @@ Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.in
 Route::post('/carrinho/adicionar', [CarrinhoController::class, 'store'])->name('carrinho.store');
 Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])->name('carrinho.destroy');
 
+Route::post('/carrinho/checkout', [CarrinhoController::class, 'checkout'])->name('carrinho.checkout')->middleware('auth');
+
+
 Route::get('/pedidos', function () { return view('pedidos.index'); })->name('pedidos.web.index');
 Route::get('/pedidos/criar', function () { return view('pedidos.create'); })->name('pedidos.web.create');
+
 Route::get('/inventario', [WebViewsController::class, 'inventarioIndex'])
     ->middleware('auth')
     ->name('inventario.web.index');
