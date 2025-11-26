@@ -24,7 +24,7 @@
                          class="w-24 h-24 object-cover rounded mr-4">
                     <div class="flex-1">
                         <h3 class="font-medium">foto: {{ $item->foto->id ?? 'sem identificação' }}</h3>
-                        <p class="text-sm text-gray-600">Preço: R$ {{ number_format($item->foto->Galeria->valor_foto, 2, ',', '.') }}</p>
+                        <p class="text-sm text-gray-600">Preço: R$ {{ number_format($item->foto->galeria->valor_foto, 2, ',', '.') }}</p>
                         <form action="{{ route('carrinho.destroy', $item->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')

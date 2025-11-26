@@ -104,6 +104,9 @@ class CarrinhoController extends Controller
             }
             return redirect()->route('carrinho.index')->with('error', 'Carrinho não encontrado');
         }
+        if ($carrinho->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Não autorizado'], 403);
+        }
 
         $item = $carrinho->fotos()->where('id', $id)->first();
         if (! $item) {
@@ -129,6 +132,9 @@ class CarrinhoController extends Controller
         $carrinho = Carrinho::find($id);
         if (! $carrinho) {
             return response()->json(['message' => 'Carrinho não encontrado'], 404);
+        }
+        if ($carrinho->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Não autorizado'], 403);
         }
 
         $fotoId = $request->input('foto_id');
@@ -255,6 +261,11 @@ class CarrinhoController extends Controller
         if (! $carrinho) {
             return response()->json(['message' => 'Carrinho não encontrado'], 404);
         }
+
+        if ($carrinho->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Não autorizado'], 403);
+        }
+        
         if ($carrinho->fotos->isEmpty()) {
             return response()->json(['message' => 'Carrinho vazio'], 400);
         }
