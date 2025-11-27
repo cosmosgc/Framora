@@ -215,8 +215,11 @@ class CarrinhoController extends Controller
         DB::beginTransaction();
         try {
             $valorTotal = $carrinho->fotos->sum(function ($item) {
-                return floatval($item->preco) * max(1, intval($item->quantidade ?? 1));
+                $preco = $item->foto->galeria->valor_foto ?? 0;
+                $qtd   = max(1, intval($item->quantidade ?? 1));
+                return floatval($preco) * $qtd;
             });
+
 
             // Cria pedido
             $pedido = Pedido::create([
@@ -276,7 +279,11 @@ class CarrinhoController extends Controller
 
         DB::beginTransaction();
         try {
-            $valorTotal = $carrinho->fotos->sum(fn($item) => floatval($item->preco) * max(1, intval($item->quantidade ?? 1)));
+            $valorTotal = $carrinho->fotos->sum(function ($item) {
+                $preco = $item->preco ?? $item->foto->galeria->valor_foto ?? 0;
+                $quantidade = max(1, (int)($item->quantidade ?? 1));
+                return $preco * $quantidade;
+            });
 
             $pedido = Pedido::create([
                 'user_id' => $carrinho->user_id,
