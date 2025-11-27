@@ -76,6 +76,12 @@
                             <span>{{ __('Nova Galeria') }}</span>
                         </div>
                     </x-nav-link>
+                    <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')">
+                        <div class="flex items-center gap-1.5">
+                            <x-heroicon-s-shopping-cart class="w-4 h-4" />
+                            <span>{{ __('Carrinho') }}</span>
+                        </div>
+                    </x-nav-link>
                 </div>
             </div>
 
