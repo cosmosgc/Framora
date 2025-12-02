@@ -24,7 +24,7 @@
                          class="w-24 h-24 object-cover rounded mr-4">
                     <div class="flex-1">
                         <h3 class="font-medium">foto: {{ $item->foto->id ?? 'sem identificação' }}</h3>
-                        <p class="text-sm text-gray-600">Preço: R$ {{ number_format($item->foto->galeria->valor_foto, 2, ',', '.') }}</p>
+                        <p class="text-sm text-gray-600">Preço: R$ {{ number_format(/*$item->preco ??*/ $item->foto->galeria->valor_foto ?? 0, 2, ',', '.') }}</p>
                         <form action="{{ route('carrinho.destroy', $item->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
@@ -38,24 +38,90 @@
         <div class="mt-6 p-4 bg-gray-50 rounded">
             <p class="text-lg font-semibold">
                 Total:
-                    R$ {{ number_format(
-                            $carrinho->fotos->sum(fn($i) => $i->foto->galeria->valor_foto),
-                            2, ',', '.'
-                        ) }}
+                R$ {{ number_format(
+                        $carrinho->fotos->sum(function($i){ return (/*$i->preco ?? */$i->foto->galeria->valor_foto ?? 0); }),
+                        2, ',', '.'
+                    ) }}
             </p>
 
-            <form action="{{ route('carrinho.checkout') }}" method="POST" class="mt-4">
+            {{-- Form que agora usa JS para chamar a API que cria a Stripe Checkout Session --}}
+            <form action="{{ route('stripe.checkout', $carrinho->id) }}" method="POST" class="mt-4">
                 @csrf
+
                 <label class="block mb-2">Forma de pagamento</label>
-                <select name="forma_pagamento" required class="border p-2 rounded w-full md:w-1/3">
+                <select name="forma_pagamento" id="forma_pagamento" required class="border p-2 rounded w-full md:w-1/3">
                     <option value="pix">PIX</option>
                     <option value="cartao">Cartão</option>
                     <option value="boleto">Boleto</option>
                 </select>
 
-                <button type="submit" class="mt-4 px-4 py-2 bg-green-600 text-white rounded">Finalizar compra</button>
+                <div class="mt-4">
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">
+                        Finalizar compra
+                    </button>
+                </div>
             </form>
+
+
+            <div id="checkoutMessage" class="mt-4"></div>
         </div>
     @endif
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('checkoutForm');
+    const btn = document.getElementById('checkoutBtn');
+    const spinner = document.getElementById('checkoutSpinner');
+    const message = document.getElementById('checkoutMessage');
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // limpa mensagens anteriores
+        message.innerHTML = '';
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+
+        const formaPagamento = document.getElementById('forma_pagamento').value;
+
+        try {
+            // URL da API que cria a sessão Stripe.
+            // Ajuste se sua rota for diferente. Aqui usamos /api/stripe/checkout/{id}
+            const endpoint = "{{ route('stripe.api.checkout',$carrinho->id) }}";
+
+            const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    forma_pagamento: formaPagamento
+                })
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(()=>({message: 'Erro desconhecido'}));
+                throw new Error(err.message || 'Erro ao criar sessão de pagamento');
+            }
+
+            const data = await resp.json();
+
+            if (data.url) {
+                // redireciona para a Stripe Checkout (página hospedada pelo Stripe)
+                window.location.href = data.url;
+            } else {
+                throw new Error('Resposta inválida do servidor (sem url)');
+            }
+
+        } catch (err) {
+            console.error(err);
+            message.innerHTML = `<div class="bg-red-100 text-red-800 p-3 rounded">${err.message}</div>`;
+            btn.disabled = false;
+            spinner.classList.add('hidden');
+        }
+    });
+});
+</script>
 @endsection

@@ -15,6 +15,9 @@ use App\Http\Controllers\AtualizacoesController;
 use App\Http\Controllers\WebViewsController;
 
 
+use App\Http\Controllers\StripeController;
+
+
 
 // Home: banners + galerias em destaque
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -79,5 +82,13 @@ Route::middleware('auth')->group(function () {
 Route::get('/updates', action: [AtualizacoesController::class, 'index'])->name('updates.index');
 Route::get('/updates/update', [AtualizacoesController::class, 'update'])->name('updates.update');
 
+Route::middleware(['auth'])->group(function () {
+    // rota que o form vai submeter (POST)
+    Route::post('/stripe/checkout/{id}', [StripeController::class, 'createCheckoutSession'])
+         ->name('stripe.checkout');
+
+    Route::get('/stripe/success', [StripeController::class, 'success'])->name('stripe.success');
+    Route::get('/stripe/cancel', [StripeController::class, 'cancel'])->name('stripe.cancel');
+});
 
 require __DIR__.'/auth.php';

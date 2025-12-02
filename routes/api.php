@@ -15,6 +15,7 @@ use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\ConfiguracaoController;
+use App\Http\Controllers\StripeController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -61,7 +62,7 @@ Route::post('/carrinhos/{id}/fotos', [CarrinhoController::class, 'addFoto']);
 Route::put('/carrinhos/{id}/fotos/{fid}', [CarrinhoController::class, 'updateFoto']);
 Route::delete('/carrinhos/{id}/fotos/{fid}', [CarrinhoController::class, 'removeFoto']);
 
-Route::post('/carrinhos/{id}/checkout', [CarrinhoController::class, 'apiCheckout'])->middleware('auth:sanctum');
+Route::post('/carrinhos/{id}/checkout', [StripeController::class, 'createCheckoutSession'])->middleware('auth:sanctum');
 
 // ----------------- PEDIDOS -----------------
 Route::apiResource('pedidos', PedidoController::class);
@@ -72,3 +73,6 @@ Route::get('/inventario/{id}', [InventarioController::class, 'show']);
 
 // ----------------- CONFIGURAÇÕES -----------------
 Route::apiResource('configuracoes', ConfiguracaoController::class);
+
+
+Route::post('/stripe/checkout/{id}', [StripeController::class, 'createCheckoutSession'])->name("stripe.api.checkout"); // apiCheckout substituto
