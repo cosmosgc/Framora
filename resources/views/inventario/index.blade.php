@@ -3,11 +3,11 @@
 @section('title', 'Meu Inventário')
 
 @section('content')
-<div class="flex items-center justify-between mb-4">
+<div class="flex items-center justify-between flex-col mb-4">
   <h1 class="text-xl font-semibold">Meu Inventário</h1>
 
-  <div class="flex items-center gap-2">
-    <select id="filterStatus" class="rounded border px-2 py-1 text-sm">
+  <div class="flex items-center flex-wrap gap-2">
+    <select id="filterStatus" class="rounded border  px-2 py-1 text-sm">
       <option value="">Todos status</option>
       <option value="pago">Pago</option>
       <option value="pendente">Pendente</option>

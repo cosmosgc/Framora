@@ -15,6 +15,9 @@ use App\Http\Controllers\AtualizacoesController;
 use App\Http\Controllers\WebViewsController;
 
 
+use App\Http\Controllers\StripeController;
+
+
 
 // Home: banners + galerias em destaque
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -36,8 +39,12 @@ Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.in
 Route::post('/carrinho/adicionar', [CarrinhoController::class, 'store'])->name('carrinho.store');
 Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])->name('carrinho.destroy');
 
+// Route::post('/carrinho/checkout', [CarrinhoController::class, 'checkout'])->name('carrinho.checkout')->middleware('auth');
+
+
 Route::get('/pedidos', function () { return view('pedidos.index'); })->name('pedidos.web.index');
 Route::get('/pedidos/criar', function () { return view('pedidos.create'); })->name('pedidos.web.create');
+
 Route::get('/inventario', [WebViewsController::class, 'inventarioIndex'])
     ->middleware('auth')
     ->name('inventario.web.index');
@@ -75,5 +82,14 @@ Route::middleware('auth')->group(function () {
 Route::get('/updates', action: [AtualizacoesController::class, 'index'])->name('updates.index');
 Route::get('/updates/update', [AtualizacoesController::class, 'update'])->name('updates.update');
 
+Route::middleware(['auth'])->group(function () {
+    // rota que o form vai submeter (POST)
+    Route::post('/stripe/checkout/{id}', [StripeController::class, 'createCheckoutSession'])
+         ->name('stripe.checkout');
+
+    Route::get('/stripe/success', [StripeController::class, 'success'])->name('stripe.success');
+    Route::get('/stripe/cancel', [StripeController::class, 'cancel'])->name('stripe.cancel');
+});
+Route::post('/stripe/webhook', [StripeController::class, 'webhook'])->name('stripe.webhook');
 
 require __DIR__.'/auth.php';
