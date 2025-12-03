@@ -147,6 +147,18 @@ class CarrinhoController extends Controller
             return response()->json(['message' => 'Foto não encontrada'], 404);
         }
 
+        $owned = Inventario::where('user_id', $carrinho->user_id)
+                    ->where('foto_id', $fotoId)
+                    ->exists();
+
+        if ($owned) {
+            // Se já tem no inventário, não permitir adicionar ao carrinho
+            if ($request->wantsJson() || $request->is('api/*')) {
+                return response()->json(['message' => 'Usuário já possui esta foto no inventário'], 409);
+            }
+            return redirect()->route('carrinho.index')->with('info', 'Você já possui esta foto no seu inventário.');
+        }
+
         $existing = $carrinho->fotos()->where('foto_id', $fotoId)->first();
         if ($existing) {
             return response()->json(['message' => 'Foto já adicionada', 'item' => $existing], 200);
@@ -167,6 +179,9 @@ class CarrinhoController extends Controller
         $carrinho = Carrinho::find($id);
         if (! $carrinho) {
             return response()->json(['message' => 'Carrinho não encontrado'], 404);
+        }
+        if ($carrinho->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Não autorizado'], 403);
         }
 
         $item = $carrinho->fotos()->where('id', $fid)->first();
