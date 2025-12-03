@@ -25,6 +25,7 @@ return new class extends Migration
     {
         Schema::table('pedidos', function (Blueprint $table) {
             //
+            $table->dropColumn(['stripe_session_id', 'payment_intent']);
         });
     }
 };

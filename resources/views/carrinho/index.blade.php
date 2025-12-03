@@ -45,7 +45,7 @@
             </p>
 
             {{-- Form que agora usa JS para chamar a API que cria a Stripe Checkout Session --}}
-            <form action="{{ route('stripe.checkout', $carrinho->id) }}" method="POST" class="mt-4">
+            <form id="checkoutForm" action="{{ route('stripe.checkout', $carrinho->id) }}" method="POST" class="mt-4">
                 @csrf
 
                 <label class="block mb-2">Forma de pagamento</label>
@@ -56,8 +56,9 @@
                 </select>
 
                 <div class="mt-4">
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">
+                    <button id="checkoutBtn" type="submit" class="px-4 py-2 bg-green-600 text-white rounded">
                         Finalizar compra
+                        <span id="checkoutSpinner" class="hidden ml-2">...</span>
                     </button>
                 </div>
             </form>
