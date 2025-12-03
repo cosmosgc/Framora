@@ -208,63 +208,103 @@ class StripeController extends Controller
      */
     public function webhook(Request $request)
     {
+        // corpo cru e header
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
-        $webhookSecret = config('services.stripe.webhook_secret');
+        $webhookSecret = config('services.stripe.webhook_secret') ?? env('STRIPE_WEBHOOK_SECRET');
 
-        if ($webhookSecret) {
-            try {
-                $event = Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
-            } catch(\UnexpectedValueException $e) {
-                // Invalid payload
-                return response()->json(['message' => 'Invalid payload'], 400);
-            } catch(\Stripe\Exception\SignatureVerificationException $e) {
-                // Invalid signature
-                return response()->json(['message' => 'Invalid signature'], 400);
-            }
-        } else {
-            // Sem webhook secret: parse sem validação (menos seguro)
-            $event = json_decode($payload);
+        // Se webhooks não configurados, rejeite (opcional)
+        if (empty($webhookSecret)) {
+            Log::error('Stripe webhook secret not configured.');
+            return response()->json(['error' => 'Webhook not configured'], 500);
         }
 
-        // Processa eventos importantes
-        $type = $event->type ?? ($event->type ?? null);
+        try {
+            // valida assinatura e desserializa o evento
+            $event = Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
+        } catch (\UnexpectedValueException $e) {
+            // payload inválido
+            Log::warning('Stripe webhook: invalid payload - ' . $e->getMessage());
+            return response()->json(['message' => 'Invalid payload'], 400);
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            // assinatura inválida
+            Log::warning('Stripe webhook: invalid signature - ' . $e->getMessage());
+            return response()->json(['message' => 'Invalid signature'], 400);
+        } catch (\Exception $e) {
+            Log::error('Stripe webhook unexpected error: ' . $e->getMessage());
+            return response()->json(['message' => 'Webhook error'], 500);
+        }
 
-        if ($type === 'checkout.session.completed') {
-            $session = $event->data->object;
-            $pedidoId = $session->metadata->pedido_id ?? null;
-            if ($pedidoId) {
-                DB::beginTransaction();
-                try {
-                    $pedido = Pedido::find($pedidoId);
-                    if ($pedido && $pedido->status_pedido !== 'pago') {
-                        $pedido->status_pedido = 'pago';
-                        $pedido->payment_intent = $session->payment_intent ?? null;
-                        $pedido->save();
+        $type = $event->type;
+        Log::info("Stripe webhook received: {$type}");
 
-                        // Cria inventario e limpa carrinho
-                        $carrinho = Carrinho::with('fotos')->find($pedido->carrinho_id);
-                        if ($carrinho) {
-                            foreach ($carrinho->fotos as $item) {
-                                Inventario::create([
-                                    'user_id' => $pedido->user_id,
-                                    'foto_id' => $item->foto_id,
-                                    'pedido_id' => $pedido->id,
-                                ]);
+        // Despachar tipos relevantes
+        try {
+            if ($type === 'checkout.session.completed') {
+                $session = $event->data->object;
+
+                // metadata com pedido_id que criamos na sessão
+                $pedidoId = $session->metadata->pedido_id ?? null;
+
+                if (! $pedidoId) {
+                    Log::warning("Webhook checkout.session.completed sem metadata pedido_id. Session id: {$session->id}");
+                } else {
+                    DB::beginTransaction();
+                    try {
+                        $pedido = \App\Models\Pedido::lockForUpdate()->find($pedidoId); // lock para evitar race
+                        if (! $pedido) {
+                            Log::warning("Pedido {$pedidoId} não encontrado no webhook.");
+                        } else {
+                            if ($pedido->status_pedido === 'pago') {
+                                // já processado — idempotência
+                                Log::info("Pedido {$pedidoId} já está marcado como pago. Ignorando.");
+                            } else {
+                                // marca pedido como pago e salva dados do pagamento
+                                $pedido->status_pedido = 'pago';
+                                $pedido->payment_intent = $session->payment_intent ?? null;
+                                $pedido->stripe_session_id = $session->id;
+                                $pedido->save();
+
+                                // criar inventário e limpar carrinho
+                                $carrinho = \App\Models\Carrinho::with('fotos')->find($pedido->carrinho_id);
+                                if ($carrinho) {
+                                    foreach ($carrinho->fotos as $item) {
+                                        \App\Models\Inventario::create([
+                                            'user_id' => $pedido->user_id,
+                                            'foto_id' => $item->foto_id,
+                                            'pedido_id' => $pedido->id,
+                                        ]);
+                                    }
+                                    // remove os itens (assumindo relacionamento pivot com método fotos())
+                                    $carrinho->fotos()->delete();
+                                }
                             }
-                            $carrinho->fotos()->delete();
                         }
+
+                        DB::commit();
+                    } catch (\Exception $e) {
+                        DB::rollBack();
+                        Log::error('Erro ao processar checkout.session.completed: ' . $e->getMessage());
+                        return response()->json(['message' => 'Erro interno'], 500);
                     }
-                    DB::commit();
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    Log::error('Erro no webhook ao processar checkout.session.completed: '.$e->getMessage());
-                    return response()->json(['message' => 'Erro interno'], 500);
                 }
             }
+
+            // Exemplo: tratar payment_intent.succeeded se você usa Payment Intents diretamente
+            if ($type === 'payment_intent.succeeded') {
+                $intent = $event->data->object;
+                Log::info("payment_intent.succeeded received: {$intent->id}");
+                // aqui você poderia encontrar o pedido por payment_intent e marcar como pago
+                // (implemente conforme necessidade)
+            }
+
+            // outros eventos que queira tratar...
+        } catch (\Exception $e) {
+            Log::error('Erro no processamento do webhook: ' . $e->getMessage());
+            return response()->json(['message' => 'Erro interno'], 500);
         }
 
-        // retorne 200 para ack
+        // Acknowledge
         return response()->json(['received' => true], 200);
     }
 }
