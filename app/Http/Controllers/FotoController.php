@@ -4,9 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Foto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Intervention\Image\Image;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+
+use App\Helpers\ImageConfig;
+
 
 class FotoController extends Controller
 {
@@ -100,8 +107,8 @@ class FotoController extends Controller
         $validator = Validator::make($request->all(), [
             'referencia_tipo' => 'required|in:galeria,evento',
             'galeria_id'   => 'required|integer',
-            'fotos'           => 'required|array',
-            'fotos.*'         => 'image|max:5120', // cada imagem até 5MB
+            'fotos'        => 'required|array',
+            'fotos.*'      => 'image|max:5120',
         ]);
 
         if ($validator->fails()) {
@@ -111,65 +118,115 @@ class FotoController extends Controller
             ], 422);
         }
 
+        // === CONFIGS (ENV ou DB) ============================================
+        $thumbWidth  = intval(ImageConfig::get('IMAGE_THUMB_WIDTH', 300));
+        $mediaWidth  = intval(ImageConfig::get('IMAGE_MEDIA_WIDTH', 1200));
+        $thumbQ      = intval(ImageConfig::get('IMAGE_THUMB_QUALITY', 60));
+        $mediaQ      = intval(ImageConfig::get('IMAGE_MEDIA_QUALITY', 80));
+
+        $wmPath      = ImageConfig::get('IMAGE_WATERMARK_PATH', public_path('uploads/watermark/wm.png'));
+        if (!file_exists($wmPath)) {
+            $wmPath = public_path('uploads/watermark/wm.png'); // fallback
+        }
+
+        $wmOpacity   = intval(ImageConfig::get('IMAGE_WATERMARK_OPACITY', 40));  // 0–100
+        $wmScale     = intval(ImageConfig::get('IMAGE_WATERMARK_SCALE_PERCENT', 15)); // %
+        $wmSpacing   = intval(ImageConfig::get('IMAGE_WATERMARK_TILE_SPACING', 0));
+
+        // Manager Intervention v3
+        $manager = new ImageManager(new Driver());
+
         $fotosCriadas = [];
 
+        // === PROCESSAMENTO ===================================================
         foreach ($request->file('fotos') as $file) {
             try {
-                // Caminhos base (em public/)
+                // Pastas
                 $basePath    = public_path('uploads/fotos');
-                $originalDir = $basePath . '/originais';
-                $thumbDir    = $basePath . '/thumbs';
-                $mediaDir    = $basePath . '/medias';
+                $originalDir = "{$basePath}/originais";
+                $thumbDir    = "{$basePath}/thumbs";
+                $mediaDir    = "{$basePath}/medias";
 
-                // 🔧 Garante que os diretórios existem
                 foreach ([$originalDir, $thumbDir, $mediaDir] as $dir) {
-                    if (!is_dir($dir)) {
-                        mkdir($dir, 0755, true);
-                    }
+                    if (!is_dir($dir)) mkdir($dir, 0755, true);
                 }
 
-                // Nome único
-                $filename = uniqid('foto_') . '.' . $file->getClientOriginalExtension();
-
-                // Salva original
+                // Filename
+                $filename = uniqid('foto_') . "." . $file->getClientOriginalExtension();
+                $originalPath = "{$originalDir}/{$filename}";
                 $file->move($originalDir, $filename);
 
-                // Caminhos relativos (para salvar no banco)
-                $path = "uploads/fotos/originais/{$filename}";
-                $thumbPath = "uploads/fotos/thumbs/{$filename}";
-                $fotoPath  = "uploads/fotos/medias/{$filename}";
+                // Caminhos p/ banco
+                $thumbPathRel = "uploads/fotos/thumbs/{$filename}";
+                $mediaPathRel = "uploads/fotos/medias/{$filename}";
+                $origPathRel  = "uploads/fotos/originais/{$filename}";
 
-                // 🔧 Cria versões menores com Intervention Image
-                if (class_exists(\Intervention\Image\Facades\Image::class)) {
-                    $image = Image::make($originalDir . '/' . $filename);
+                // Lê imagem original
+                $imgOriginal = $manager->read($originalPath);
 
-                    // thumb 300px
-                    $image->resize(300, null, fn($c) => $c->aspectRatio())
-                        ->save($thumbDir . '/' . $filename);
+                //-----------------------------------------------------------------
+                // Função: aplica watermark tile + salva versão reduzida
+                //-----------------------------------------------------------------
+                $processar = function($srcImg, $destPath, $targetWidth, $quality) use (
+                    $manager, $wmPath, $wmOpacity, $wmScale, $wmSpacing
+                ) {
+                    // 1. Redimensiona
+                    if ($srcImg->width() > $targetWidth) {
+                        $srcImg->scale(width: $targetWidth);
+                    }
 
-                    // média 1200px
-                    $image->resize(1200, null, fn($c) => $c->aspectRatio())
-                        ->save($mediaDir . '/' . $filename);
-                } else {
-                    // fallback: copiar original
-                    copy($originalDir . '/' . $filename, $thumbDir . '/' . $filename);
-                    copy($originalDir . '/' . $filename, $mediaDir . '/' . $filename);
-                }
+                    // 2. Aplica watermark tiled se existir
+                    if (file_exists($wmPath)) {
+                        $wm = $manager->read($wmPath);
 
-                // 🔧 Cria registro no banco
+                        // Escala do watermark
+                        $newW = intval($srcImg->width() * ($wmScale / 100));
+                        $wm->scale(width: $newW);
+
+                        // Aplica opacidade
+                        if ($wmOpacity < 100) {
+                            // $wm->blendTransparency($wmOpacity);
+                        }
+
+                        $wmW = $wm->width();
+                        $wmH = $wm->height();
+
+                        // Tile manual
+                        for ($x = 0; $x < $srcImg->width(); $x += ($wmW + $wmSpacing)) {
+                            for ($y = 0; $y < $srcImg->height(); $y += ($wmH + $wmSpacing)) {
+                                $srcImg->place($wm, 'top-left', $x, $y);
+                            }
+                        }
+                    }
+
+                    // 3. Salva JPEG otimizado
+                    $srcImg
+                        ->toJpeg($quality)
+                        ->save($destPath);
+                };
+
+                // === GERAR THUMB ====================================================
+                $imgThumb = $manager->read($originalPath);
+                $processar($imgThumb, "{$thumbDir}/{$filename}", $thumbWidth, $thumbQ);
+
+                // === GERAR MEDIA ====================================================
+                $imgMedia = $manager->read($originalPath);
+                $processar($imgMedia, "{$mediaDir}/{$filename}", $mediaWidth, $mediaQ);
+
+                // === Salvar no banco ================================================
                 $foto = Foto::create([
                     'referencia_tipo' => $request->referencia_tipo,
-                    'galeria_id'   => $request->galeria_id,
-                    'caminho_thumb'   => $thumbPath,
-                    'caminho_foto'    => $fotoPath,
-                    'caminho_original'=> $path,
+                    'galeria_id'      => $request->galeria_id,
+                    'caminho_thumb'   => $thumbPathRel,
+                    'caminho_foto'    => $mediaPathRel,
+                    'caminho_original'=> $origPathRel,
                     'ativo'           => true,
                 ]);
-                
+
                 $fotosCriadas[] = $foto;
 
             } catch (\Exception $e) {
-                \Log::error("Erro ao processar imagem: " . $e->getMessage());
+                Log::error("Erro ao processar imagem (v3): " . $e->getMessage());
             }
         }
 
@@ -177,8 +234,6 @@ class FotoController extends Controller
             'success' => true,
             'message' => count($fotosCriadas) . ' foto(s) enviada(s) com sucesso.',
             'data'    => $fotosCriadas,
-            'galeria_id' => $request->galeria_id,
-            'foto'
         ], 201);
     }
 
@@ -324,6 +379,90 @@ class FotoController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Foto removida com sucesso.',
+        ]);
+    }
+    public function testWatermark($fotoId, $tipo = 'media')
+    {
+        $foto = Foto::find($fotoId);
+
+        if (!$foto) {
+            return response("Foto não encontrada", 404);
+        }
+
+        // Arquivo base (usar original SEMPRE)
+        $path = public_path($foto->caminho_original);
+
+        if (!file_exists($path)) {
+            return response("Arquivo original não encontrado", 404);
+        }
+
+        // --- Configs (env ou DB) -------------------------------
+        $thumbW = intval(ImageConfig::get('IMAGE_THUMB_WIDTH', 300));
+        $mediaW = intval(ImageConfig::get('IMAGE_MEDIA_WIDTH', 1200));
+        $thumbQ = intval(ImageConfig::get('IMAGE_THUMB_QUALITY', 60));
+        $mediaQ = intval(ImageConfig::get('IMAGE_MEDIA_QUALITY', 80));
+
+        $wmPath    = ImageConfig::get('IMAGE_WATERMARK_PATH', public_path('uploads/watermark/wm.png'));
+        if (!file_exists($wmPath)) {
+            $wmPath = public_path('uploads/watermark/wm.png');
+        }
+
+        $wmOpacity = intval(ImageConfig::get('IMAGE_WATERMARK_OPACITY', 40));
+        $wmScale   = intval(ImageConfig::get('IMAGE_WATERMARK_SCALE_PERCENT', 15));
+        $wmSpacing = intval(ImageConfig::get('IMAGE_WATERMARK_TILE_SPACING', 0));
+
+        // --- Driver Intervention v3 ----------------------------
+        $manager = new ImageManager(new Driver());
+        $img = $manager->read($path);
+
+        // Ajustar tamanho conforme o tipo solicitado
+        if ($tipo === 'thumb') {
+            $finalWidth = $thumbW;
+            $quality = $thumbQ;
+        } elseif ($tipo === 'full') {
+            // mantém original
+            $finalWidth = $img->width();
+            $quality = $mediaQ;
+        } else { // default: media
+            $finalWidth = $mediaW;
+            $quality = $mediaQ;
+        }
+
+        // Redimensionar proporcionalmente
+        if ($img->width() > $finalWidth) {
+            $img->scale(width: $finalWidth);
+        }
+
+        // Aplicar watermark tiled
+        if (file_exists($wmPath)) {
+            $wm = $manager->read($wmPath);
+
+            // escala do watermark
+            $scaledW = intval($img->width() * ($wmScale / 100));
+            $wm->scale(width: $scaledW);
+
+            // opacidade
+            if ($wmOpacity < 100) {
+                // $wm->blendTransparency($wmOpacity);
+            }
+
+            // tile
+            $wmW = $wm->width();
+            $wmH = $wm->height();
+
+            for ($x = 0; $x < $img->width(); $x += ($wmW + $wmSpacing)) {
+                for ($y = 0; $y < $img->height(); $y += ($wmH + $wmSpacing)) {
+                    $img->place($wm, 'top-left', $x, $y);
+                }
+            }
+        }
+
+        // Retornar imagem como resposta HTTP (JPEG)
+        $binary = $img->toJpeg($quality)->toString();
+
+        return Response::make($binary, 200, [
+            'Content-Type' => 'image/jpeg',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
         ]);
     }
 }
