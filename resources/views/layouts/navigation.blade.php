@@ -3,7 +3,7 @@
     // Requer: TailwindCSS e Alpine.js carregados na página.
 @endphp
 
-<nav x-data="{ open: false }" x-on:keydown.escape.window="open = false" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shadow">
+<nav x-data="{ open: false, openSection: null }" x-on:keydown.escape.window="open = false; openSection = null" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 shadow">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
             <!-- Left: Brand + Desktop Links -->
@@ -16,59 +16,75 @@
 
                 <!-- Desktop links -->
                 <div class="hidden sm:flex sm:items-center sm:space-x-4">
-                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
-                        <div class="flex items-center gap-1.5">
-                            <x-heroicon-o-home class="w-4 h-4" />
-                            <span>{{ __('Home') }}</span>
-                        </div>
-                    </x-nav-link>
+                    {{-- Grupo: Principal --}}
+                    <div class="flex items-center gap-1">
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-o-home class="w-5 h-5" />
+                                <span>{{ __('Home') }}</span>
+                            </div>
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('galerias.web.index')" :active="request()->routeIs('galerias.web.*')">
-                        <div class="flex items-center gap-1.5">
-                            <x-heroicon-s-photo class="w-4 h-4" />
-                            <span>{{ __('Galerias') }}</span>
-                        </div>
-                    </x-nav-link>
+                        <x-nav-link :href="route('galerias.web.index')" :active="request()->routeIs('galerias.web.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-s-photo class="w-5 h-5" />
+                                <span>{{ __('Galerias') }}</span>
+                            </div>
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('categorias.web.index')" :active="request()->routeIs('categorias.*')">
-                        <div class="flex items-center gap-1.5">
-                            <x-heroicon-o-square-3-stack-3d class="w-4 h-4" />
-                            <span>{{ __('Categorias') }}</span>
-                        </div>
-                    </x-nav-link>
+                        <x-nav-link :href="route('categorias.web.index')" :active="request()->routeIs('categorias.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-o-square-3-stack-3d class="w-5 h-5" />
+                                <span>{{ __('Categorias') }}</span>
+                            </div>
+                        </x-nav-link>
+                    </div>
 
-                    <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')">
-                        <div class="flex items-center gap-1.5">
-                            <x-heroicon-s-shopping-cart class="w-4 h-4" />
-                            <span>{{ __('Pedidos') }}</span>
-                        </div>
-                    </x-nav-link>
+                    {{-- Grupo: Loja --}}
+                    <div class="flex items-center gap-1">
+                        <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-s-shopping-cart class="w-5 h-5" />
+                                <span>{{ __('Pedidos') }}</span>
+                            </div>
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('favoritos.index')" :active="request()->routeIs('favoritos.*')">
-                        <div class="flex items-center gap-1.5">
-                            <x-heroicon-o-heart class="w-4 h-4" />
-                            <span>{{ __('Favoritos') }}</span>
-                        </div>
-                    </x-nav-link>
+                        <x-nav-link :href="route('favoritos.index')" :active="request()->routeIs('favoritos.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-o-heart class="w-5 h-5" />
+                                <span>{{ __('Favoritos') }}</span>
+                            </div>
+                        </x-nav-link>
 
-                    <x-nav-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')" class="block">
-                        <div class="flex items-center gap-2">
-                            <x-heroicon-s-archive-box class="w-5 h-5" />
-                            <span>{{ __('Inventário') }}</span>
-                        </div>
-                    </x-nav-link>
+                        <x-nav-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-s-archive-box class="w-5 h-5" />
+                                <span>{{ __('Inventário') }}</span>
+                            </div>
+                        </x-nav-link>
+                    </div>
 
-                    <x-nav-link :href="route('galerias.web.create')" :active="request()->routeIs('galerias.web.create')" class="block">
-                        <div class="flex items-center gap-2">
-                            <x-heroicon-m-folder-plus class="w-5 h-5" />
-                            <span>{{ __('Nova Galeria') }}</span>
-                        </div>
-                    </x-nav-link>
+                    {{-- Grupo: Admin/Updates --}}
+                    <div class="flex items-center gap-1">
+                        <x-nav-link :href="route('updates.index')" :active="request()->routeIs('updates.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-s-archive-box class="w-5 h-5" />
+                                <span>{{ __('Updates') }}</span>
+                            </div>
+                        </x-nav-link>
+
+                        <x-nav-link :href="route('galerias.web.create')" :active="request()->routeIs('galerias.web.create')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-m-folder-plus class="w-5 h-5" />
+                                <span>{{ __('Nova Galeria') }}</span>
+                            </div>
+                        </x-nav-link>
+                    </div>
                 </div>
             </div>
 
             <!-- Right: Desktop user dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:space-x-4">
+            <div class="hidden sm:flex flex-wrap sm:items-center sm:space-x-4">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button type="button" aria-haspopup="true" aria-expanded="false"
@@ -99,7 +115,7 @@
             <!-- Mobile hamburger -->
             <div class="sm:hidden">
                 <button
-                    @click="open = !open"
+                    @click="open = !open; if (!open) openSection = null"
                     x-bind:aria-expanded="open"
                     aria-controls="mobile-menu"
                     type="button"
@@ -117,7 +133,7 @@
         </div>
     </div>
 
-    <!-- Mobile menu panel -->
+    <!-- Mobile menu panel with collapsible sections -->
     <div x-cloak x-show="open" x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 -translate-y-2"
          x-transition:enter-end="opacity-100 translate-y-0"
@@ -125,76 +141,121 @@
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 -translate-y-2"
          class="sm:hidden border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800" id="mobile-menu"
-         @click.away="open = false"
+         @click.away="open = false; openSection = null"
     >
         <div class="px-4 pt-4 pb-3 space-y-2">
-            {{-- Mobile nav links (duplicate of desktop) --}}
-            <x-nav-link :href="route('home')" :active="request()->routeIs('home')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-o-home class="w-5 h-5" />
-                    <span>{{ __('Home') }}</span>
-                </div>
-            </x-nav-link>
+            {{-- Seção: Principal --}}
+            <div class="border-b border-gray-100 dark:border-gray-700">
+                <button
+                    @click="openSection = (openSection === 'principal' ? null : 'principal')"
+                    class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md"
+                >
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-o-home class="w-5 h-5" />
+                        <span class="font-medium">{{ __('Principal') }}</span>
+                    </div>
+                    <svg :class="{ 'transform rotate-180': openSection === 'principal' }" class="h-5 w-5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
 
-            <x-nav-link :href="route('galerias.web.index')" :active="request()->routeIs('galerias.web.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-s-photo class="w-5 h-5" />
-                    <span>{{ __('Galerias') }}</span>
-                </div>
-            </x-nav-link>
+                <div x-show="openSection === 'principal'" x-collapse class="px-3 pb-3">
+                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-home class="w-4 h-4" />
+                            <span>{{ __('Home') }}</span>
+                        </div>
+                    </x-nav-link>
 
-            <x-nav-link :href="route('categorias.web.index')" :active="request()->routeIs('categorias.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-o-square-3-stack-3d class="w-5 h-5" />
-                    <span>{{ __('Categorias') }}</span>
-                </div>
-            </x-nav-link>
+                    <x-nav-link :href="route('galerias.web.index')" :active="request()->routeIs('galerias.web.*')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-s-photo class="w-4 h-4" />
+                            <span>{{ __('Galerias') }}</span>
+                        </div>
+                    </x-nav-link>
 
-            <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-s-shopping-cart class="w-5 h-5" />
-                    <span>{{ __('Pedidos') }}</span>
+                    <x-nav-link :href="route('categorias.web.index')" :active="request()->routeIs('categorias.*')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-square-3-stack-3d class="w-4 h-4" />
+                            <span>{{ __('Categorias') }}</span>
+                        </div>
+                    </x-nav-link>
                 </div>
-            </x-nav-link>
+            </div>
 
-            <x-nav-link :href="route('favoritos.index')" :active="request()->routeIs('favoritos.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-o-heart class="w-5 h-5" />
-                    <span>{{ __('Favoritos') }}</span>
-                </div>
-            </x-nav-link>
+            {{-- Seção: Loja --}}
+            <div class="border-b border-gray-100 dark:border-gray-700">
+                <button
+                    @click="openSection = (openSection === 'loja' ? null : 'loja')"
+                    class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md"
+                >
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-s-shopping-cart class="w-5 h-5" />
+                        <span class="font-medium">{{ __('Loja') }}</span>
+                    </div>
+                    <svg :class="{ 'transform rotate-180': openSection === 'loja' }" class="h-5 w-5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
 
-            <x-nav-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-s-archive-box class="w-5 h-5" />
-                    <span>{{ __('Inventário') }}</span>
-                </div>
-            </x-nav-link>
+                <div x-show="openSection === 'loja'" x-collapse class="px-3 pb-3">
+                    <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-s-shopping-cart class="w-4 h-4" />
+                            <span>{{ __('Pedidos') }}</span>
+                        </div>
+                    </x-nav-link>
 
-            <x-nav-link :href="route('updates.index')" :active="request()->routeIs('updates.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-s-archive-box class="w-5 h-5" />
-                    <span>{{ __('Updates') }}</span>
-                </div>
-            </x-nav-link>
+                    <x-nav-link :href="route('favoritos.index')" :active="request()->routeIs('favoritos.*')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-o-heart class="w-4 h-4" />
+                            <span>{{ __('Favoritos') }}</span>
+                        </div>
+                    </x-nav-link>
 
-            
-            <x-nav-link :href="route('galerias.web.create')" :active="request()->routeIs('galerias.web.create')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-m-folder-plus class="w-5 h-5" />
-                    <span>{{ __('Nova Galeria') }}</span>
-                </div>
-            </x-nav-link>
+                    <x-nav-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-s-archive-box class="w-4 h-4" />
+                            <span>{{ __('Inventário') }}</span>
+                        </div>
+                    </x-nav-link>
 
-            <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')" class="block">
-                <div class="flex items-center gap-2">
-                    <x-heroicon-s-shopping-cart class="w-5 h-5" />
-                    <span>{{ __('Carrinho') }}</span>
+                    <x-nav-link :href="route('galerias.web.create')" :active="request()->routeIs('galerias.web.create')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-m-folder-plus class="w-4 h-4" />
+                            <span>{{ __('Nova Galeria') }}</span>
+                        </div>
+                    </x-nav-link>
                 </div>
-            </x-nav-link>
+            </div>
+
+            {{-- Seção: Admin / Updates --}}
+            <div class="border-b border-gray-100 dark:border-gray-700">
+                <button
+                    @click="openSection = (openSection === 'admin' ? null : 'admin')"
+                    class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-900 rounded-md"
+                >
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-s-archive-box class="w-5 h-5" />
+                        <span class="font-medium">{{ __('Admin / Updates') }}</span>
+                    </div>
+                    <svg :class="{ 'transform rotate-180': openSection === 'admin' }" class="h-5 w-5 transition-transform" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <div x-show="openSection === 'admin'" x-collapse class="px-3 pb-3">
+                    <x-nav-link :href="route('updates.index')" :active="request()->routeIs('updates.*')" class="block py-1">
+                        <div class="flex items-center gap-2">
+                            <x-heroicon-s-archive-box class="w-4 h-4" />
+                            <span>{{ __('Updates') }}</span>
+                        </div>
+                    </x-nav-link>
+                </div>
+            </div>
 
             {{-- Divider --}}
-            <div class="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+            <div class="my-2 border-t border-gray-100 dark:border-gray-700"></div>
 
             {{-- Mobile auth area --}}
             @auth
