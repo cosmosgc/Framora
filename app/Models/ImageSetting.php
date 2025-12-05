@@ -10,7 +10,7 @@ use App\Models\Foto;
 
 class ImageSetting extends Model
 {
-    protected $table = 'galerias';
+    protected $table = 'image_settings';
 
     protected $fillable = ['key', 'value'];
     public $timestamps = true;

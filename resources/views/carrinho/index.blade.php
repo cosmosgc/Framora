@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (err) {
             console.error('Erro ao iniciar checkout:', err);
             // exibir mensagem ao usuário
+            throw err;
             }
 
 
