@@ -32,9 +32,9 @@ class StripeController extends Controller
             return response()->json(['message' => 'Carrinho não encontrado'], 404);
         }
         
-        if ($carrinho->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Não autorizado'], 403);
-        }
+        // if ($carrinho->user_id !== Auth::id()) {
+        //     return response()->json(['message' => 'Não autorizado'], 403);
+        // }
 
         if ($carrinho->fotos->isEmpty()) {
             return response()->json(['message' => 'Carrinho vazio'], 400);
@@ -110,11 +110,15 @@ class StripeController extends Controller
             DB::commit();
 
             // Se a requisição quer JSON (ex: chamada fetch/ajax), retorna JSON com a url
-            if ($request->wantsJson() || $request->ajax() || $request->expectsJson()) {
-                return response()->json(['url' => $session->url, 'pedido' => $pedido], 201);
+            if ($request->expectsJson() || $request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'url' => $session->url, // URL do Stripe Checkout
+                    'id' => $session->id,
+                ]);
             }
 
-            // Requisição web normal (form submit): redireciona diretamente para a Stripe Checkout
+            // Caso contrário (navegação normal), redireciona
             return redirect()->away($session->url);
 
 

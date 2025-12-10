@@ -92,4 +92,7 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::post('/stripe/webhook', [StripeController::class, 'webhook'])->name('stripe.webhook');
 
+Route::get('/watermark-test/{foto}/{tipo?}', [FotoController::class, 'testWatermark']);
+
+
 require __DIR__.'/auth.php';

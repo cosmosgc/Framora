@@ -91,30 +91,43 @@ document.addEventListener('DOMContentLoaded', function () {
             // Ajuste se sua rota for diferente. Aqui usamos /api/stripe/checkout/{id}
             const endpoint = "{{ route('stripe.api.checkout',$carrinho->id) }}";
 
+            try {
             const resp = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': "{{ csrf_token() }}"
                 },
                 body: JSON.stringify({
-                    forma_pagamento: formaPagamento
+                forma_pagamento: formaPagamento
                 })
             });
 
             if (!resp.ok) {
-                const err = await resp.json().catch(()=>({message: 'Erro desconhecido'}));
-                throw new Error(err.message || 'Erro ao criar sessão de pagamento');
+                // tenta ler JSON de erro, senão pega texto
+                const errObj = await resp.json().catch(async ()=> {
+                const txt = await resp.text().catch(()=> 'Erro desconhecido');
+                return { message: txt };
+                });
+                throw new Error(errObj.message || 'Erro ao criar sessão de pagamento');
             }
 
             const data = await resp.json();
 
             if (data.url) {
-                // redireciona para a Stripe Checkout (página hospedada pelo Stripe)
+                // navega para Stripe Checkout como uma navegação normal (sem CORS problem)
                 window.location.href = data.url;
             } else {
                 throw new Error('Resposta inválida do servidor (sem url)');
             }
+
+            } catch (err) {
+            console.error('Erro ao iniciar checkout:', err);
+            // exibir mensagem ao usuário
+            throw err;
+            }
+
 
         } catch (err) {
             console.error(err);
