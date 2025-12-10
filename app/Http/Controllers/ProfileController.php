@@ -7,7 +7,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+
 
 class ProfileController extends Controller
 {
@@ -24,18 +26,51 @@ class ProfileController extends Controller
     /**
      * Update the user's profile information.
      */
+    // use at top of controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        // Handle avatar upload using move()
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+
+            // Create output directory inside public/
+            $outputDirPath = 'uploads/avatar';
+            $outputDir = public_path($outputDirPath);
+
+            if (!file_exists($outputDir)) {
+                mkdir($outputDir, 0777, true);
+            }
+
+            // Generate a filename
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            // Move file to /public/avatars/
+            $file->move($outputDir, $filename);
+
+            // Delete old avatar if present
+            if ($user->avatar && file_exists(public_path('avatars/' . $user->avatar))) {
+                unlink(public_path('avatars/' . $user->avatar));
+            }
+            
+            // Save filename to DB
+            $data['avatar'] = $outputDirPath.'/'.$filename;
         }
 
-        $request->user()->save();
+        // Fill and save model
+        $user->fill($data);
 
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
+
+
 
     /**
      * Delete the user's account.
