@@ -1,7 +1,7 @@
 <section>
     <header>
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {{ __('Profile Information') }}
+            {{ __('Informação de perfil') }}
         </h2>
 
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
@@ -77,7 +77,7 @@
             <x-input-label for="bio" :value="__('Bio')" />
             <textarea id="bio" name="bio" rows="4" class="mt-1 block w-full border rounded-md p-2" maxlength="1000">{{ old('bio', $user->bio) }}</textarea>
             <x-input-error class="mt-2" :messages="$errors->get('bio')" />
-            <p class="text-xs text-gray-500 mt-1">Short bio (optional, up to 1000 characters).</p>
+            <p class="text-xs text-gray-500 mt-1">Biografia curta (opcional, até 1000 letras).</p>
         </div>
 
         <div class="flex items-center gap-4">
