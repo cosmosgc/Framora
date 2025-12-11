@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Foto;
+use App\Models\Banner;
+use App\Models\Galeria;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -101,7 +103,6 @@ class FotoController extends Controller
      * Store a newly created resource in storage.
      * Upload de imagem + criação do registro.
      */
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -133,10 +134,15 @@ class FotoController extends Controller
         $wmScale     = intval(ImageConfig::get('IMAGE_WATERMARK_SCALE_PERCENT', 15)); // %
         $wmSpacing   = intval(ImageConfig::get('IMAGE_WATERMARK_TILE_SPACING', 0));
 
-        // Manager Intervention v3
         $manager = new ImageManager(new Driver());
 
         $fotosCriadas = [];
+
+        // Load galeria once
+        $galeria = Galeria::find($request->galeria_id);
+
+        // flag to avoid setting banner more than once in the same request
+        $bannerSetThisRequest = false;
 
         // === PROCESSAMENTO ===================================================
         foreach ($request->file('fotos') as $file) {
@@ -225,6 +231,34 @@ class FotoController extends Controller
 
                 $fotosCriadas[] = $foto;
 
+                // === Banner logic: create/update Banner if galeria has no banner or banner.imagem is empty
+                if (!$bannerSetThisRequest && $galeria) {
+                    if (empty($galeria->banner_id)) {
+                        // create a new banner and attach to galeria
+                        $banner = Banner::create([
+                            'titulo'    => $galeria->nome ?? 'Banner',
+                            'descricao' => $galeria->descricao ?? null,
+                            'imagem'    => $thumbPathRel,
+                            'link'      => null,
+                            'ordem'     => 0,
+                            'ativo'     => true,
+                        ]);
+
+                        $galeria->banner_id = $banner->id;
+                        $galeria->save();
+
+                        $bannerSetThisRequest = true;
+                    } else {
+                        // galeria already has a banner_id — check if that banner has an imagem
+                        $banner = Banner::find($galeria->banner_id);
+                        if ($banner && (is_null($banner->imagem) || $banner->imagem === '')) {
+                            $banner->imagem = $thumbPathRel;
+                            $banner->save();
+                            $bannerSetThisRequest = true;
+                        }
+                    }
+                }
+
             } catch (\Exception $e) {
                 Log::error("Erro ao processar imagem (v3): " . $e->getMessage());
             }
@@ -236,6 +270,7 @@ class FotoController extends Controller
             'data'    => $fotosCriadas,
         ], 201);
     }
+
 
 
     /**
