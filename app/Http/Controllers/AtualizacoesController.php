@@ -11,9 +11,13 @@ use Carbon\Carbon;
 
 class AtualizacoesController extends Controller
 {
-    protected string $repo = env('GIT_REPO', 'cosmosgc/Framora'); // proprietário/repo
+    protected string $repo;
     protected string $basePath = 'updates'; // storage/app/atualizacoes
 
+    public function __construct()
+    {
+        $this->repo = env('GIT_REPO', 'cosmosgc/Framora');
+    }
     /**
      * Display a listing of the resource.
      */
