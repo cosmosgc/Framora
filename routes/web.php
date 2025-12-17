@@ -94,5 +94,49 @@ Route::post('/stripe/webhook', [StripeController::class, 'webhook'])->name('stri
 
 Route::get('/watermark-test/{foto}/{tipo?}', [FotoController::class, 'testWatermark']);
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminCategoriaController;
+use App\Http\Controllers\Admin\AdminImageSettingController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminRoleController;
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth']) // later you can add ->middleware(['auth','admin'])
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
+
+        // Categorias
+        Route::get('/categorias', [AdminCategoriaController::class, 'index'])
+            ->name('categorias.index');
+        Route::get('/categorias/create', [AdminCategoriaController::class, 'create'])
+            ->name('categorias.create');
+        Route::post('/categorias', [AdminCategoriaController::class, 'store'])
+            ->name('categorias.store');
+        Route::get('/categorias/{id}/edit', [AdminCategoriaController::class, 'edit'])
+            ->name('categorias.edit');
+        Route::put('/categorias/{id}', [AdminCategoriaController::class, 'update'])
+            ->name('categorias.update');
+        Route::delete('/categorias/{id}', [AdminCategoriaController::class, 'destroy'])
+            ->name('categorias.destroy');
+
+        // Image Settings (global configs, watermark, quality, etc)
+        Route::get('/image-settings', [AdminImageSettingController::class, 'index'])
+            ->name('image-settings.index');
+        Route::post('/image-settings', [AdminImageSettingController::class, 'update'])
+            ->name('image-settings.update');
+        Route::resource('/users', AdminUserController::class);
+
+
+        Route::resource('/roles', AdminRoleController::class)
+            ->except(['show']);
+
+        // Future examples
+        // Route::resource('/banners', AdminBannerController::class);
+    });
+
 
 require __DIR__.'/auth.php';
