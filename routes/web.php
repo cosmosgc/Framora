@@ -101,7 +101,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminGaleriaController;
 use App\Http\Controllers\Admin\AdminFotoController;
-
+use App\Http\Controllers\Admin\AdminPedidoController;
 
 Route::prefix('admin')
     ->name('admin.')
@@ -149,6 +149,12 @@ Route::prefix('admin')
 
         Route::delete('/fotos/{foto}', [AdminFotoController::class, 'destroy'])
             ->name('fotos.destroy');  
+        
+        Route::get('/pedidos', [AdminPedidoController::class, 'index'])
+            ->name('pedidos.index');
+
+        Route::get('/pedidos/{pedido}', [AdminPedidoController::class, 'show'])
+            ->name('pedidos.show');
 
 
         // Future examples
