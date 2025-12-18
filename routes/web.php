@@ -99,6 +99,9 @@ use App\Http\Controllers\Admin\AdminCategoriaController;
 use App\Http\Controllers\Admin\AdminImageSettingController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminRoleController;
+use App\Http\Controllers\Admin\AdminGaleriaController;
+use App\Http\Controllers\Admin\AdminFotoController;
+
 
 Route::prefix('admin')
     ->name('admin.')
@@ -133,6 +136,20 @@ Route::prefix('admin')
 
         Route::resource('/roles', AdminRoleController::class)
             ->except(['show']);
+
+            
+        Route::get('/galerias', [AdminGaleriaController::class, 'index'])
+            ->name('galerias.index');
+
+        Route::get('/galerias/{galeria}', [AdminGaleriaController::class, 'show'])
+            ->name('galerias.show');
+        
+        Route::delete('/galerias/{galeria}', [AdminGaleriaController::class, 'destroy'])
+            ->name('galerias.destroy');
+
+        Route::delete('/fotos/{foto}', [AdminFotoController::class, 'destroy'])
+            ->name('fotos.destroy');  
+
 
         // Future examples
         // Route::resource('/banners', AdminBannerController::class);

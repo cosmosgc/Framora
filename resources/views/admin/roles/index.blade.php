@@ -18,7 +18,7 @@
 @endif
 
 <div class="mb-4 flex justify-end">
-    @if(auth()->id() === 1)
+    @if(auth()->id() === 1 || auth()->user()?->isHost())
         <a href="{{ route('admin.roles.create') }}"
            class="px-4 py-2 bg-blue-600 text-white rounded">
             + New Role
@@ -41,7 +41,7 @@
                     <td class="p-3 font-medium">{{ $role->name }}</td>
                     <td class="p-3 text-gray-600">{{ $role->description }}</td>
                     <td class="p-3 text-center space-x-2">
-                        @if(auth()->id() === 1)
+                        @if(auth()->id() === 1 || auth()->user()?->isHost())
                             <a href="{{ route('admin.roles.edit', $role->id) }}"
                                class="text-blue-600 hover:underline">
                                 Edit

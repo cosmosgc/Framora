@@ -4,9 +4,15 @@
        class="block px-3 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('admin.dashboard') ? 'bg-gray-800' : '' }}">
         📊 Dashboard
     </a>
+
     <a href="{{ route('admin.users.index') }}"
        class="block px-3 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('admin.users.*') ? 'bg-gray-800' : '' }}">
         🖼 Users
+    </a>
+
+    <a href="{{ route('admin.galerias.index') }}"
+       class="block px-3 py-2 rounded hover:bg-gray-800 {{ request()->routeIs('admin.galerias.*') ? 'bg-gray-800' : '' }}">
+        🖼 Galerias
     </a>
 
     <a href="{{ route('admin.categorias.index') }}"
