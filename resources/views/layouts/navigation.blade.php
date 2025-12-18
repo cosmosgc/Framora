@@ -99,6 +99,14 @@
             </x-slot>
 
             <x-slot name="content">
+
+                {{-- Admin link (only admins / hosts) --}}
+                @if(Auth::user()->isAdmin())
+                    <x-dropdown-link :href="route('admin.dashboard')">
+                        🛠 Admin
+                    </x-dropdown-link>
+                @endif
+
                 <x-dropdown-link :href="route('profile.edit')">
                     {{ __('Perfil') }}
                 </x-dropdown-link>
@@ -112,8 +120,8 @@
                 </form>
             </x-slot>
         </x-dropdown>
-
     @endauth
+
 
 
     @guest

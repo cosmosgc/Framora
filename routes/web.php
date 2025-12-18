@@ -102,7 +102,7 @@ use App\Http\Controllers\Admin\AdminRoleController;
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth']) // later you can add ->middleware(['auth','admin'])
+    ->middleware(['auth', 'admin.access']) // later you can add ->middleware(['auth','admin'])
     ->group(function () {
 
         // Dashboard
