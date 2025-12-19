@@ -35,7 +35,7 @@
                 <td>{{ $user->id }}</td>
                 <td>
                     {{ $user->name }}
-                    @if($user->id === 1)
+                    @if($user->isHost())
                         <span class="text-xs text-blue-600">(HOST)</span>
                     @endif
                 </td>

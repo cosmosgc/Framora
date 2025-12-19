@@ -84,9 +84,9 @@
 
             {{-- User --}}
             <div class="flex items-center gap-3">
-                <span class="text-sm text-gray-600 hidden sm:block truncate max-w-[160px]">
+                <!-- <span class="text-sm text-gray-600 hidden sm:block truncate max-w-[160px]">
                     {{ auth()->user()->name ?? '' }}
-                </span>
+                </span> -->
 
                 <div class="w-9 h-9 rounded-full bg-gray-300
                             flex items-center justify-center text-sm font-bold">

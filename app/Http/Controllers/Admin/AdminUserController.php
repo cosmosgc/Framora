@@ -39,7 +39,7 @@ class AdminUserController extends Controller
         $user = User::findOrFail($id);
 
         // Prevent removing admin from HOST itself
-        if ($user->id === 1) {
+        if ($user->isHost()) {
             return back()->withErrors('The host user roles cannot be modified.');
         }
 
