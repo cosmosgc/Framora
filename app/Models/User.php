@@ -66,6 +66,9 @@ class User extends Authenticatable
     {
         return $this->hasRole('admin') || $this->isHost();
     }
-
+    public function carrinho()
+    {
+        return $this->hasOne(Carrinho::class);
+    }
 
 }

@@ -42,12 +42,7 @@
 
                     {{-- Grupo: Loja --}}
                     <div class="flex items-center gap-1">
-                        <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')" class="block">
-                            <div class="flex items-center gap-2">
-                                <x-heroicon-s-shopping-cart class="w-5 h-5" />
-                                <span>{{ __('Pedidos') }}</span>
-                            </div>
-                        </x-nav-link>
+                        
 
                         <x-nav-link :href="route('favoritos.index')" :active="request()->routeIs('favoritos.*')" class="block">
                             <div class="flex items-center gap-2">
@@ -56,12 +51,7 @@
                             </div>
                         </x-nav-link>
 
-                        <x-nav-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')" class="block">
-                            <div class="flex items-center gap-2">
-                                <x-heroicon-s-archive-box class="w-5 h-5" />
-                                <span>{{ __('Inventário') }}</span>
-                            </div>
-                        </x-nav-link>
+                        
                     </div>
 
                     {{-- Grupo: Admin/Updates --}}
@@ -85,6 +75,23 @@
 
             <!-- Right: Desktop user dropdown -->
             <div class="hidden sm:flex flex-wrap sm:items-center sm:space-x-4">
+                <x-nav-link :href="route('carrinho.index')" :active="request()->routeIs('carrinho.*')" class="block py-1">
+                    <div class="relative flex items-center gap-2">
+                        <x-heroicon-s-shopping-cart class="w-4 h-4" />
+                        
+
+                        <span
+                            id="cart-count-mobile"
+                            class="absolute -top-1 left-3 min-w-[16px] h-[16px]
+                                px-1 text-[10px] font-bold text-white
+                                bg-red-600 rounded-full
+                                flex items-center justify-center
+                                hidden">
+                            0
+                        </span>
+                    </div>
+                </x-nav-link>
+
 
     @auth
         <x-dropdown align="right" width="48">
@@ -109,6 +116,12 @@
 
                 <x-dropdown-link :href="route('profile.edit')">
                     {{ __('Perfil') }}
+                </x-dropdown-link>
+                <x-dropdown-link :href="route('inventario.web.index')" :active="request()->routeIs('inventario.*')" class="block">
+                    <div class="flex items-center gap-2">
+                        <x-heroicon-s-archive-box class="w-5 h-5" />
+                        <span>{{ __('Inventário') }}</span>
+                    </div>
                 </x-dropdown-link>
 
                 <form method="POST" action="{{ route('logout') }}">
@@ -331,3 +344,33 @@
         </div>
     </div>
 </nav>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('{{ route('carrinhos.show', auth()->id()) }}', {
+        method: 'GET',
+        credentials: 'same-origin', // ⭐ ESSENCIAL
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        }
+    })
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+        if (!data || !data.count) return;
+
+        const badges = [
+            document.getElementById('cart-count'),
+            document.getElementById('cart-count-mobile')
+        ];
+
+        badges.forEach(badge => {
+            if (!badge) return;
+            badge.textContent = data.count;
+            badge.classList.remove('hidden');
+        });
+    })
+    .catch(err => console.error(err));
+});
+</script>
+
+

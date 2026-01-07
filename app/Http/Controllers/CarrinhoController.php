@@ -7,6 +7,7 @@ use App\Models\CarrinhoFoto;
 use App\Models\Foto;
 use App\Models\Pedido;
 use App\Models\Inventario;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,39 @@ class CarrinhoController extends Controller
 
         return view('carrinho.index', compact('carrinho'));
     }
+
+    public function show(Request $request, $userId)
+    {
+        $user = $userId ? User::find($userId) : Auth::user();
+
+        // Usuário sem carrinho ainda
+        if (!$user) {
+            return response()->json([
+                'count' => 0,
+            ]);
+        }
+
+        $carrinho = Carrinho::where('user_id', $user->id)
+            ->with('fotos')
+            ->first();
+
+        if (!$carrinho) {
+            return response()->json([
+                'count' => 0,
+            ]);
+        }
+
+        // 🔢 Opção 1: soma das quantidades
+        $count = $carrinho->fotos->sum('quantidade');
+
+        // 🔢 Opção 2 (alternativa): itens distintos
+        // $count = $carrinho->fotos->count();
+
+        return response()->json([
+            'count' => $count,
+        ]);
+    }
+
 
     // Adiciona foto ao carrinho (web form ou api)
     public function store(Request $request)

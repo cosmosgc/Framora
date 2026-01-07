@@ -58,6 +58,7 @@ Route::delete('/favoritos/{id}', [FavoritoController::class, 'destroy']);
 
 // ----------------- CARRINHOS -----------------
 Route::apiResource('carrinhos', CarrinhoController::class)->except(['update']);
+
 Route::post('/carrinhos/{id}/fotos', [CarrinhoController::class, 'addFoto']);
 Route::put('/carrinhos/{id}/fotos/{fid}', [CarrinhoController::class, 'updateFoto']);
 Route::delete('/carrinhos/{id}/fotos/{fid}', [CarrinhoController::class, 'removeFoto']);
