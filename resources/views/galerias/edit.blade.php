@@ -47,12 +47,12 @@
     {{-- Banner (upload only) --}}
     <div class="mb-4">
         <label class="block font-semibold mb-1">Banner da Galeria</label>
-
-        <input type="file"
-            name="banner"
-            id="bannerInput"
-            accept="image/*"
-            class="w-full border rounded px-3 py-2">
+        <div class="relative w-full overflow-hidden">
+            <input type="file"
+                name="banner"
+                accept="image/*"
+                class="block w-full max-w-full border rounded px-3 py-2 text-sm">
+        </div>
 
         <p class="text-sm text-gray-600 mt-1">
             Envie uma nova imagem para substituir o banner atual.
