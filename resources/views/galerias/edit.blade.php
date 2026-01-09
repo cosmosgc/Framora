@@ -44,21 +44,30 @@
             @endforeach
         </select>
     </div>
-
-    {{-- Banner (select) --}}
+    {{-- Banner (upload only) --}}
     <div class="mb-4">
-        <label class="block font-semibold mb-1">Banner</label>
-        <select name="banner_id" class="w-full border rounded px-3 py-2">
-            <option value="">Nenhum</option>
-            @foreach($banners as $banner)
-                <option value="{{ $banner->id }}"
-                    {{ $galeria->banner_id == $banner->id ? 'selected' : '' }}>
-                    Banner #{{ $banner->id }}
-                </option>
-            @endforeach
-        </select>
-        <p class="text-sm text-gray-600 mt-1">Se quiser, posso trocar isso por upload de imagem.</p>
+        <label class="block font-semibold mb-1">Banner da Galeria</label>
+
+        <input type="file"
+            name="banner"
+            id="bannerInput"
+            accept="image/*"
+            class="w-full border rounded px-3 py-2">
+
+        <p class="text-sm text-gray-600 mt-1">
+            Envie uma nova imagem para substituir o banner atual.
+        </p>
     </div>
+
+    {{-- Banner preview --}}
+    <div id="bannerPreviewWrapper"
+        class="mb-4 {{ $galeria->banner ? '' : 'hidden' }} border rounded overflow-hidden">
+        <img id="bannerPreviewImg"
+            src="{{ $galeria->banner ? asset($galeria->banner->imagem) : '' }}"
+            class="w-full h-48 object-cover"
+            alt="Banner preview">
+    </div>
+
 
     {{-- Local --}}
     <div class="mb-4">
@@ -148,6 +157,25 @@ document.addEventListener('DOMContentLoaded', function () {
     const list = document.getElementById('fotos-list');
     const container = grid || list;
     const META_CSRF = document.querySelector('meta[name="csrf-token"]');
+
+    const bannerInput = document.getElementById('bannerInput');
+    const bannerPreviewWrapper = document.getElementById('bannerPreviewWrapper');
+    const bannerPreviewImg = document.getElementById('bannerPreviewImg');
+
+    if (bannerInput) {
+        bannerInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+                bannerPreviewImg.src = ev.target.result;
+                bannerPreviewWrapper.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
 
     function getCsrfToken() {
         return META_CSRF ? META_CSRF.getAttribute('content') : '';

@@ -2,63 +2,84 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use Illuminate\Http\Request;
 
 class BannerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => Banner::where('ativo', true)
+                ->orderBy('ordem')
+                ->get()
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descricao' => 'nullable|string',
+            'link' => 'nullable|string|max:255',
+            'ordem' => 'nullable|integer',
+            'imagem' => 'required|image|max:4096'
+        ]);
+
+        // Ensure directory exists
+        $destinationPath = public_path('uploads/banner');
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0755, true);
+        }
+
+        // Generate unique filename
+        $file = $request->file('imagem');
+        $filename = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
+
+        // Move file
+        $file->move($destinationPath, $filename);
+
+        // Save relative path
+        $banner = Banner::create([
+            'titulo' => $data['titulo'],
+            'descricao' => $data['descricao'] ?? null,
+            'link' => $data['link'] ?? null,
+            'ordem' => $data['ordem'] ?? 0,
+            'imagem' => 'uploads/banner/' . $filename,
+            'ativo' => true
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $banner
+        ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+
+    public function show(Banner $banner)
     {
-        //
+        return response()->json([
+            'success' => true,
+            'data' => $banner
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function destroy(Banner $banner)
     {
-        //
+        if ($banner->imagem) {
+            $filePath = public_path($banner->imagem);
+
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        $banner->delete();
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
 }

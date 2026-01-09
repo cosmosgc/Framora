@@ -44,6 +44,28 @@
                 <option value="">Selecione uma categoria</option>
             </select>
         </div>
+        
+        <div class="mb-4">
+            <label class="block font-semibold mb-1">Banner da Galeria</label>
+
+            <select id="bannerSelect" name="banner_id"
+                class="w-full border rounded px-3 py-2 mb-2">
+                <option value="">Sem banner</option>
+            </select>
+
+            <input id="bannerInput" type="file" accept="image/*"
+                class="w-full border rounded px-3 py-2">
+
+            <p class="text-sm text-gray-500 mt-1">
+                Você pode escolher um banner existente ou enviar um novo.
+            </p>
+        </div>
+
+        <div id="bannerPreview"
+            class="mb-4 hidden border rounded overflow-hidden">
+            <img class="w-full h-48 object-cover" />
+        </div>
+
 
         <div class="mb-4">
             <label class="block font-semibold mb-1">Fotos (múltiplas)</label>
@@ -65,12 +87,50 @@
 <script>
 const BASE_URL = "{{ url('/') }}";
 
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     const categoriaSelect = document.querySelector('[name="categoria_id"]');
     const form = document.getElementById('galeriaForm');
     const status = document.getElementById('statusMessage');
     const fotosInput = document.getElementById('fotosInput');
     const previewContainer = document.getElementById('previewContainer');
+    
+    const bannerSelect = document.getElementById('bannerSelect');
+    const bannerInput = document.getElementById('bannerInput');
+    const bannerPreview = document.getElementById('bannerPreview');
+    const bannerPreviewImg = bannerPreview.querySelector('img');
+
+    let bannerFile = null;
+
+    bannerSelect.addEventListener('change', () => {
+        bannerInput.value = '';
+        bannerFile = null;
+
+        const opt = bannerSelect.selectedOptions[0];
+        if (!opt || !opt.dataset.img) {
+            bannerPreview.classList.add('hidden');
+            return;
+        }
+
+        bannerPreviewImg.src = `${BASE_URL}/storage/${opt.dataset.img}`;
+        bannerPreview.classList.remove('hidden');
+    });
+    bannerInput.addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        bannerSelect.value = '';
+        bannerFile = file;
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+            bannerPreviewImg.src = ev.target.result;
+            bannerPreview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+
 
     // Array mutável para controlar os arquivos que serão realmente enviados
     let selectedFiles = []; // cada item: { id: uniqueId, file: File }
@@ -193,6 +253,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                     baseForm.append(el.name, el.value || '');
                 }
             });
+            
+            // If user uploaded a new banner → create it first
+            let bannerId = bannerSelect.value || null;
+
+            if (bannerFile) {
+                const bannerForm = new FormData();
+                bannerForm.append('titulo', 'Banner da Galeria');
+                bannerForm.append('imagem', bannerFile);
+
+                const bannerRes = await fetch(`${BASE_URL}/api/banners`, {
+                    method: 'POST',
+                    body: bannerForm
+                });
+
+                const bannerData = await bannerRes.json();
+                if (!bannerData.success) {
+                    status.innerHTML = `<p class="text-red-600">Erro ao criar banner</p>`;
+                    return;
+                }
+
+                bannerId = bannerData.data.id;
+            }
+
+
+            //Append banner_id to gallery form
+            if (bannerId) {
+                baseForm.append('banner_id', bannerId);
+            }
 
             const galeriaRes = await fetch(`${BASE_URL}/api/galerias`, {
                 method: 'POST',

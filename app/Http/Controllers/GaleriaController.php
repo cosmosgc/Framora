@@ -103,6 +103,7 @@ class GaleriaController extends Controller
             'tempo_duracao' => 'nullable|string|max:255',
             'valor_foto'    => 'required|numeric|min:0',
             'banner'        => 'nullable|image|max:5120', // até 5MB
+            'banner_id' => 'nullable|integer|exists:banners,id',
             'user_id'       => 'nullable|integer|exists:users,id',
         ]);
 
@@ -125,7 +126,7 @@ class GaleriaController extends Controller
 
         $galeria = Galeria::create([
             'categoria_id'  => $request->categoria_id,
-            'banner_id'     => null, // será setado depois
+            'banner_id'     => $request->banner_id,
             'user_id'       => $userId,
             'nome'          => $request->nome,
             'descricao'     => $request->descricao,
@@ -182,7 +183,7 @@ class GaleriaController extends Controller
      */
     public function edit(string $id)
     {
-        $galeria = Galeria::find($id);
+        $galeria = Galeria::with('banner')->find($id);
 
         if (!$galeria) {
             return response()->json([
@@ -192,22 +193,28 @@ class GaleriaController extends Controller
         }
 
         $categorias = Categoria::select('id', 'nome')->get();
-        $banners = Banner::select('id','caminho')->get(); 
+
         return response()->json([
-            'success' => true,
-            'data'    => $galeria,
+            'success'    => true,
+            'data'       => [
+                'galeria' => $galeria,
+                'banner'  => $galeria->banner ? [
+                    'id'     => $galeria->banner->id,
+                    'imagem' => $galeria->banner->imagem,
+                ] : null,
+            ],
             'categorias' => $categorias,
-            'banners' => $banners,
-            'message' => 'Use PUT /api/galerias/{id} para atualizar esta galeria.'
+            'message'    => 'Use PUT /api/galerias/{id} para atualizar esta galeria.'
         ]);
     }
+
 
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        $galeria = Galeria::find($id);
+        $galeria = Galeria::with('banner')->find($id);
 
         if (!$galeria) {
             return response()->json([
@@ -234,36 +241,72 @@ class GaleriaController extends Controller
             ], 422);
         }
 
-        // Atualiza banner se enviado
-        if ($request->hasFile('banner')) {
-            $file = $request->file('banner');
-            $filename = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
-            $bannerPath = $file->storeAs('banners', $filename, 'public');
-
-            if ($galeria->banner_id) {
-                $banner = \App\Models\Banner::find($galeria->banner_id);
-                if ($banner) {
-                    Storage::disk('public')->delete($banner->imagem);
-                    $banner->update(['imagem' => $bannerPath]);
-                }
-            } else {
-                $banner = \App\Models\Banner::create([
-                    'titulo'    => $galeria->nome,
-                    'descricao' => $galeria->descricao,
-                    'imagem'    => $bannerPath,
-                    'ordem'     => 0,
-                    'ativo'     => 1,
-                ]);
-                $galeria->banner_id = $banner->id;
-            }
-        }
-
+        /*
+        |--------------------------------------------------------------------------
+        | Update gallery fields (NO banner logic here)
+        |--------------------------------------------------------------------------
+        */
         $galeria->fill($request->only([
-            'categoria_id', 'nome', 'descricao', 'local', 'data',
-            'tempo_duracao', 'valor_foto'
+            'categoria_id',
+            'nome',
+            'descricao',
+            'local',
+            'data',
+            'tempo_duracao',
+            'valor_foto'
         ]));
 
         $galeria->save();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Banner upload / replace (BANNER TABLE ONLY)
+        |--------------------------------------------------------------------------
+        */
+        if ($request->hasFile('banner')) {
+
+            $file = $request->file('banner');
+            $destinationPath = public_path('uploads/banner');
+
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+
+            $filename = uniqid('banner_') . '.' . $file->getClientOriginalExtension();
+            $file->move($destinationPath, $filename);
+
+            $relativePath = 'uploads/banner/' . $filename;
+
+            // CASE 1: gallery already has banner → replace image only
+            if ($galeria->banner) {
+
+                $oldPath = public_path($galeria->banner->imagem);
+                if ($galeria->banner->imagem && file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+
+                $galeria->banner->update([
+                    'imagem'    => $relativePath,
+                    'titulo'    => $galeria->nome,
+                    'descricao' => $galeria->descricao,
+                ]);
+
+            }
+            // CASE 2: gallery has no banner → create & attach
+            else {
+                $banner = Banner::create([
+                    'titulo'    => $galeria->nome,
+                    'descricao' => $galeria->descricao,
+                    'imagem'    => $relativePath,
+                    'ordem'     => 0,
+                    'ativo'     => true,
+                ]);
+
+                $galeria->update([
+                    'banner_id' => $banner->id,
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
