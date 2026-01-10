@@ -344,6 +344,7 @@
         </div>
     </div>
 </nav>
+@auth
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     fetch('{{ route('carrinhos.show', auth()->id()) }}', {
@@ -372,5 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(err => console.error(err));
 });
 </script>
+@endauth
 
 
