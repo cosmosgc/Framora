@@ -7,6 +7,7 @@
 
 <form action="{{ route('admin.categorias.update', $categoria->id) }}"
       method="POST"
+      enctype="multipart/form-data"
       class="max-w-xl bg-white p-6 rounded shadow">
 
     @csrf
@@ -21,15 +22,27 @@
 
     <div class="mb-4">
         <label class="block font-medium mb-1">Descrição</label>
-        <textarea name="descricao" class="w-full border rounded px-3 py-2"
+        <textarea name="descricao"
+                  class="w-full border rounded px-3 py-2"
                   rows="4">{{ old('descricao', $categoria->descricao) }}</textarea>
     </div>
 
+    {{-- Thumbnail upload --}}
     <div class="mb-4">
-        <label class="block font-medium mb-1">Thumbnail (path)</label>
-        <input type="text" name="thumbnail"
-               class="w-full border rounded px-3 py-2"
-               value="{{ old('thumbnail', $categoria->thumbnail) }}">
+        <label class="block font-medium mb-1">Thumbnail</label>
+
+        <input type="file"
+               name="thumbnail"
+               accept="image/*"
+               onchange="previewThumbnail(event)"
+               class="w-full border rounded px-3 py-2">
+
+        {{-- Preview --}}
+        <div class="mt-3">
+            <img id="thumbnailPreview"
+                 src="{{ $categoria->thumbnail ? asset($categoria->thumbnail) : '' }}"
+                 class="max-h-40 rounded border {{ $categoria->thumbnail ? '' : 'hidden' }}">
+        </div>
     </div>
 
     <div class="mb-6">
@@ -50,5 +63,14 @@
         </a>
     </div>
 </form>
+
+{{-- Preview script --}}
+<script>
+function previewThumbnail(event) {
+    const img = document.getElementById('thumbnailPreview');
+    img.src = URL.createObjectURL(event.target.files[0]);
+    img.classList.remove('hidden');
+}
+</script>
 
 @endsection

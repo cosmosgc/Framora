@@ -27,7 +27,7 @@ class AdminUserController extends Controller
     public function update(Request $request, $id)
     {
         // Only HOST (id = 1) can manage roles
-        if (Auth::id() !== 1) {
+        if (!User::findOrFail(Auth::id())->isHost()) {
             abort(403, 'Only the host user can manage roles.');
         }
 
@@ -35,9 +35,7 @@ class AdminUserController extends Controller
             'roles' => 'nullable|array',
             'roles.*' => 'exists:roles,id',
         ]);
-
         $user = User::findOrFail($id);
-
         // Prevent removing admin from HOST itself
         if ($user->isHost()) {
             return back()->withErrors('The host user roles cannot be modified.');
@@ -55,7 +53,7 @@ class AdminUserController extends Controller
      */
     public function destroy($id)
     {
-        if (Auth::id() !== 1) {
+        if (!User::findOrFail(Auth::id())->isHost()) {
             abort(403);
         }
 
