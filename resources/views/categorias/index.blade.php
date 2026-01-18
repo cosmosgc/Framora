@@ -7,7 +7,7 @@
     @if($categorias->isNotEmpty())
         <div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             @foreach($categorias as $categoria)
-                <a href="{{ route('categorias.show', $categoria->id) }}" 
+                <a href="{{ route('categoria.show', $categoria->id) }}" 
                    class="group block bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
                     {{-- Name above image --}}
                     <div class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-center py-2 font-semibold text-lg">

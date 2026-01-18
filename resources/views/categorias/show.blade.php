@@ -4,20 +4,28 @@
 <div class="max-w-7xl mx-auto px-6 py-10">
     {{-- Category Header --}}
     <div class="relative rounded-2xl overflow-hidden mb-10 shadow">
-        @if($categoria->banner)
+        @if($categoria->banner && $categoria->banner->imagem)
             <img 
                 src="{{ asset($categoria->banner->imagem) }}" 
                 alt="{{ $categoria->nome }}" 
                 class="w-full h-64 object-cover"
             >
+        @elseif($categoria->thumbnail)
+            <img 
+                src="{{ asset($categoria->thumbnail) }}" 
+                alt="{{ $categoria->nome }}" 
+                class="w-full h-64 object-cover"
+            >
         @else
             <div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500 text-lg">
-                No Banner
+                No Image
             </div>
         @endif
 
         <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <h1 class="text-4xl font-bold text-white drop-shadow-lg">{{ $categoria->nome }}</h1>
+            <h1 class="text-4xl font-bold text-white drop-shadow-lg">
+                {{ $categoria->nome }}
+            </h1>
         </div>
     </div>
 
