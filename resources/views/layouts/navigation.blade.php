@@ -56,12 +56,7 @@
 
                     {{-- Grupo: Admin/Updates --}}
                     <div class="flex items-center gap-1">
-                        <x-nav-link :href="route('updates.index')" :active="request()->routeIs('updates.*')" class="block">
-                            <div class="flex items-center gap-2">
-                                <x-heroicon-s-archive-box class="w-5 h-5" />
-                                <span>{{ __('Updates') }}</span>
-                            </div>
-                        </x-nav-link>
+                        
 
                         <x-nav-link :href="route('galerias.web.create')" :active="request()->routeIs('galerias.web.create')" class="block">
                             <div class="flex items-center gap-2">
@@ -69,6 +64,49 @@
                                 <span>{{ __('Nova Galeria') }}</span>
                             </div>
                         </x-nav-link>
+                    </div>
+                </div>
+
+                <!-- Search (desktop) -->
+                <div class="hidden md:flex items-center ml-6 relative" x-data="galeriaSearch()">
+                    <div class="relative">
+                        <input
+                            x-model="term"
+                            @input="doSearch()"
+                            @focus="open = true"
+                            @keydown.escape="open = false"
+                            type="search"
+                            placeholder="Buscar galerias..."
+                            class="w-44 py-2 px-3 rounded-md border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                        />
+
+                        <!-- Results dropdown -->
+                        <div x-show="open" x-cloak class="absolute mt-2 right-0 w-44 bg-white rounded-md shadow-lg z-50">
+                            <template x-if="results.length">
+                                <ul class="divide-y">
+                                    <template x-for="item in results" :key="item.id">
+                                        <li @mouseenter="setPreview(item.banner && item.banner.imagem)" @mouseleave="setPreview(null)" @click="goto(item.id)" class="cursor-pointer">
+                                            <div class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50">
+                                                <img x-show="item.banner && item.banner.imagem" :src="`${baseUrl}/${item.banner.imagem}`" class="w-16 h-10 object-cover rounded" />
+                                                <div class="flex-1">
+                                                    <div class="font-medium text-sm" x-text="item.nome"></div>
+                                                    <div class="text-xs text-gray-500" x-text="item.categoria ? item.categoria.nome : ''"></div>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+
+                            <template x-if="!results.length">
+                                <div class="px-3 py-2 text-sm text-gray-500">Nenhum resultado</div>
+                            </template>
+                        </div>
+
+                        <!-- Preview panel -->
+                        <div x-show="previewUrl" x-cloak class="absolute -right-48 top-0 w-44 p-1 bg-white rounded-md shadow-md">
+                            <img :src="previewUrl" class="w-full h-28 object-cover rounded" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -112,6 +150,12 @@
                     <x-dropdown-link :href="route('admin.dashboard')">
                         🛠 Admin
                     </x-dropdown-link>
+                    <x-nav-link :href="route('updates.index')" :active="request()->routeIs('updates.*')" class="block">
+                            <div class="flex items-center gap-2">
+                                <x-heroicon-s-archive-box class="w-5 h-5" />
+                                <span>{{ __('Updates') }}</span>
+                            </div>
+                    </x-nav-link>
                 @endif
 
                 <x-dropdown-link :href="route('profile.edit')">
@@ -205,6 +249,28 @@
          @click.away="open = false; openSection = null"
     >
         <div class="px-4 pt-4 pb-3 space-y-2">
+            <!-- Mobile search -->
+            <div class="mb-2" x-data="galeriaSearch()">
+                <input x-model="term" @input.debounce.300ms="doSearch()" @focus="open = true" type="search" placeholder="Buscar galerias..." class="w-full py-2 px-3 rounded-md border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm" />
+                <div x-show="open" x-cloak class="mt-1 bg-white rounded-md shadow">
+                    <template x-if="results.length">
+                        <ul class="divide-y">
+                            <template x-for="item in results" :key="item.id">
+                                <li @click="goto(item.id)" class="px-3 py-2 hover:bg-gray-50 flex items-center gap-3">
+                                    <img x-show="item.banner && item.banner.imagem" :src="`${baseUrl}/${item.banner.imagem}`" class="w-12 h-8 object-cover rounded" />
+                                    <div>
+                                        <div class="text-sm font-medium" x-text="item.nome"></div>
+                                        <div class="text-xs text-gray-500" x-text="item.categoria ? item.categoria.nome : ''"></div>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template x-if="!results.length">
+                        <div class="px-3 py-2 text-sm text-gray-500">Nenhum resultado</div>
+                    </template>
+                </div>
+            </div>
             {{-- Seção: Principal --}}
             <div class="border-b border-gray-100 dark:border-gray-700">
                 <button
@@ -344,6 +410,53 @@
         </div>
     </div>
 </nav>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('galeriaSearch', ()=>({
+        term: '',
+        results: [],
+        open: false,
+        previewUrl: null,
+        timer: null,
+        baseUrl: '{{ url('/') }}',
+
+        doSearch() {
+            clearTimeout(this.timer);
+            if (!this.term || this.term.length < 2) {
+                this.results = [];
+                this.open = false;
+                return;
+            }
+
+            this.timer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`${this.baseUrl}/api/galerias?search=${encodeURIComponent(this.term)}&per_page=6`, {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    if (!res.ok) { this.results = []; this.open = false; return; }
+                    const json = await res.json();
+                    this.results = json.data || [];
+                    this.open = this.results.length > 0;
+                } catch (e) {
+                    this.results = [];
+                    this.open = false;
+                    console.error('Search error', e);
+                }
+            }, 300);
+        },
+
+        goto(id) {
+            window.location.href = `${this.baseUrl}/galerias/${id}`;
+        },
+
+        setPreview(path) {
+            this.previewUrl = path ? `${this.baseUrl}/${path}` : null;
+        }
+    }));
+});
+</script>
+
 @auth
 <script>
 document.addEventListener('DOMContentLoaded', () => {
