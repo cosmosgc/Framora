@@ -17,6 +17,15 @@ class WebViewsController extends Controller
     }
 
     /**
+     * Página de busca por galerias (usa a API para consultar)
+     */
+    public function GaleriaSearch(Request $request)
+    {
+        $q = $request->query('q', $request->query('search', ''));
+        return view('galerias.search', ['q' => $q]);
+    }
+
+    /**
      * Página de detalhes da galeria
      */
     public function GaleriaShow($id)

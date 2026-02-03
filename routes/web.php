@@ -24,6 +24,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Galerias
 Route::get('/galerias', [WebViewsController::class, 'GaleriaIndex'])->name('galerias.web.index');
+Route::get('/galerias/search', [WebViewsController::class, 'GaleriaSearch'])->name('galerias.web.search');
 Route::get('/galerias/{id}', [WebViewsController::class, 'GaleriaShow'])->name('galerias.web.show');
 Route::get('/galerias/{id}/edit', [WebViewsController::class, 'GaleriaEdit'])
     ->middleware('auth')
