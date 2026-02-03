@@ -11,9 +11,7 @@
   <div class="mb-3">
     <label class="form-label">Forma de pagamento</label>
     <select name="forma_pagamento" id="forma_pagamento" class="form-select" required>
-      <option value="boleto">Boleto</option>
-      <option value="card">Cartão (stripe - não implementado)</option>
-      <option value="pix">PIX</option>
+      <option value="card">Cartão</option>
     </select>
   </div>
 
