@@ -49,7 +49,7 @@
             <label class="block font-semibold mb-1">Banner da Galeria</label>
 
             <select id="bannerSelect" name="banner_id"
-                class="w-full border rounded px-3 py-2 mb-2">
+                class="w-full border rounded px-3 py-2 mb-2" hidden>
                 <option value="">Sem banner</option>
             </select>
 
