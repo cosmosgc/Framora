@@ -25,6 +25,39 @@
         <p class="mb-6 text-gray-700">{{ $galeria->descricao }}</p>
     @endif
 
+    @if($galeria->user)
+        @php
+            $avatar = $galeria->user->avatar;
+            $avatarUrl = $avatar
+                ? (\Illuminate\Support\Str::startsWith($avatar, ['http://', 'https://'])
+                    ? $avatar
+                    : asset( $avatar))
+                : null;
+            $userInitial = strtoupper(substr($galeria->user->name ?? 'U', 0, 1));
+        @endphp
+        <div class="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div class="flex items-center gap-4">
+                <div class="h-14 w-14 overflow-hidden rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold">
+                    @if($avatarUrl)
+                        <img src="{{ $avatarUrl }}" alt="Avatar de {{ $galeria->user->name }}" class="h-full w-full object-cover">
+                    @else
+                        {{ $userInitial }}
+                    @endif
+                </div>
+                <div>
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Publicado por</p>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ $galeria->user->name }}</h2>
+                    @if($galeria->user->bio)
+                        <p class="text-sm text-gray-600">{{ $galeria->user->bio }}</p>
+                    @endif
+                    @if($galeria->user->email)
+                        <p class="text-xs text-gray-500">Contato: {{ $galeria->user->email }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="galleryGrid">
         @forelse($galeria->fotos as $i => $foto)
             @include('galerias.components.foto_item', ['foto' => $foto, 'index' => $i])
