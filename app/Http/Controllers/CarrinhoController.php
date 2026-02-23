@@ -16,7 +16,14 @@ use Illuminate\Validation\ValidationException;
 
 class CarrinhoController extends Controller
 {
-    // Retorna view (web) ou JSON (api)
+    /**
+     * Display the authenticated user's cart.
+     *
+     * Returns JSON for API requests and the cart page for web requests.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View
+     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -35,6 +42,13 @@ class CarrinhoController extends Controller
         return view('carrinho.index', compact('carrinho'));
     }
 
+    /**
+     * Return the total number of cart items for a user.
+     *
+     * @param Request $request
+     * @param int|null $userId
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request, $userId)
     {
         $user = $userId ? User::find($userId) : Auth::user();
@@ -68,7 +82,14 @@ class CarrinhoController extends Controller
     }
 
 
-    // Adiciona foto ao carrinho (web form ou api)
+    /**
+     * Add a photo to the authenticated user's cart.
+     *
+     * Prevents duplicates in both inventory and cart.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -126,7 +147,13 @@ class CarrinhoController extends Controller
     }
 
 
-    // Remove item (web + api)
+    /**
+     * Remove an item from the authenticated user's cart.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function destroy(Request $request, $id)
     {
         $user = Auth::user();
@@ -159,7 +186,13 @@ class CarrinhoController extends Controller
         return redirect()->route('carrinho.index')->with('success', 'Item removido do carrinho.');
     }
 
-    // API: adicionar foto via endpoint dedicado (usa mesmo comportamento do store)
+    /**
+     * Add a photo to a specific cart through API.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
     public function addFoto(Request $request, $id)
     {
         // $id é id do carrinho
@@ -207,7 +240,14 @@ class CarrinhoController extends Controller
         return response()->json($item, 201);
     }
 
-    // API: atualizar preco/meta do item no carrinho
+    /**
+     * Update cart item data (price and quantity) through API.
+     *
+     * @param Request $request
+     * @param int $id
+     * @param int $fid
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updateFoto(Request $request, $id, $fid)
     {
         $carrinho = Carrinho::find($id);
@@ -229,7 +269,14 @@ class CarrinhoController extends Controller
         return response()->json($item);
     }
 
-    // API: remover foto do carrinho por id
+    /**
+     * Remove a photo item from a cart through API.
+     *
+     * @param Request $request
+     * @param int $id
+     * @param int $fid
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function removeFoto(Request $request, $id, $fid)
     {
         $carrinho = Carrinho::find($id);
@@ -246,7 +293,14 @@ class CarrinhoController extends Controller
         return response()->json(['message' => 'Item removido']);
     }
 
-    // Checkout web: cria pedido, move itens para inventario, limpa carrinho
+    /**
+     * Process checkout for the authenticated user via web flow.
+     *
+     * Creates the order, moves purchased photos to inventory, and clears the cart.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function checkout(Request $request)
     {
         $user = Auth::user();
@@ -306,7 +360,13 @@ class CarrinhoController extends Controller
         }
     }
 
-    // API checkout (id do carrinho)
+    /**
+     * Process checkout for a cart through API.
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function apiCheckout(Request $request, $id)
     {
         $carrinho = Carrinho::with('fotos.foto')->find($id);

@@ -10,14 +10,21 @@ use Illuminate\Http\Request;
 
 class WebViewsController extends Controller
 {
-    //
+    /**
+     * Show galleries listing page.
+     *
+     * @return \Illuminate\View\View
+     */
     public function GaleriaIndex()
     {
         return view('galerias.index');
     }
 
     /**
-     * Página de busca por galerias (usa a API para consultar)
+     * Show gallery search page.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function GaleriaSearch(Request $request)
     {
@@ -26,7 +33,10 @@ class WebViewsController extends Controller
     }
 
     /**
-     * Página de detalhes da galeria
+     * Show details page for a specific gallery.
+     *
+     * @param int|string $id
+     * @return \Illuminate\View\View
      */
     public function GaleriaShow($id)
     {
@@ -39,10 +49,21 @@ class WebViewsController extends Controller
         return view('galerias.show', compact('galeria'));
     }
 
+    /**
+     * Show gallery creation page.
+     *
+     * @return \Illuminate\View\View
+     */
     public function GaleriaCreate()
     {
         return view('galerias.create');
     }
+    /**
+     * Show gallery edit page for the owner.
+     *
+     * @param int|string $id
+     * @return \Illuminate\View\View
+     */
     public function GaleriaEdit($id)
     {
         $galeria = Galeria::findOrFail($id);
@@ -58,19 +79,32 @@ class WebViewsController extends Controller
         return view('galerias.edit', compact('galeria','categorias','banners'));
     }
 
+    /**
+     * Show photos listing page.
+     *
+     * @return \Illuminate\View\View
+     */
     public function FotosIndex()
     {
         return view('fotos.index');
     }
 
     /**
-     * Página de detalhes da galeria
+     * Show details page for a specific photo.
+     *
+     * @param int|string $id
+     * @return \Illuminate\View\View
      */
     public function FotosShow($id)
     {
         return view('fotos.show', compact('id'));
     }
 
+    /**
+     * Show categories listing page.
+     *
+     * @return \Illuminate\View\View
+     */
     public function CategoriaIndex()
     {
         // Eager-load banner relation to avoid N+1 queries
@@ -78,12 +112,26 @@ class WebViewsController extends Controller
 
         return view('categorias.index', compact('categorias'));
     }
+    /**
+     * Show details page for a specific category.
+     *
+     * @param int|string $id
+     * @return \Illuminate\View\View
+     */
     public function CategoriaShow($id)
     {
         $categoria = Categoria::with('galerias.banner')->findOrFail($id);
 
         return view('categorias.show', compact('categoria'));
     }
+    /**
+     * Show authenticated user's inventory page grouped by gallery.
+     *
+     * Supports optional ordering and pagination.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
     public function inventarioIndex(Request $request)
     {
         $perPage = $request->query('per_page', null); // if null, get all (careful with huge sets)

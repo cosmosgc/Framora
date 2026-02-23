@@ -12,7 +12,12 @@ class InventarioController extends Controller
     // public function __construct() { $this->middleware('auth:sanctum'); }
 
     /**
+     * Display a paginated list of inventory records.
+     *
      * GET /api/inventario
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -27,7 +32,12 @@ class InventarioController extends Controller
     }
 
     /**
+     * Store a new inventory record.
+     *
      * POST /api/inventario
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -45,7 +55,12 @@ class InventarioController extends Controller
     }
 
     /**
+     * Display the specified inventory record.
+     *
      * GET /api/inventario/{inventario}
+     *
+     * @param Inventario $inventario
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Inventario $inventario)
     {
@@ -54,7 +69,13 @@ class InventarioController extends Controller
     }
 
     /**
+     * Update the specified inventory record.
+     *
      * PUT/PATCH /api/inventario/{inventario}
+     *
+     * @param Request $request
+     * @param Inventario $inventario
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Inventario $inventario)
     {
@@ -70,7 +91,12 @@ class InventarioController extends Controller
     }
 
     /**
+     * Remove the specified inventory record.
+     *
      * DELETE /api/inventario/{inventario}
+     *
+     * @param Inventario $inventario
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Inventario $inventario)
     {

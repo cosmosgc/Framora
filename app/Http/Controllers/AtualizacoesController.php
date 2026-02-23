@@ -14,12 +14,23 @@ class AtualizacoesController extends Controller
     protected string $repo;
     protected string $basePath = 'updates'; // storage/app/atualizacoes
 
+    /**
+     * Initialize controller configuration.
+     *
+     * @return void
+     */
     public function __construct()
     {
         $this->repo = env('GIT_REPO', 'cosmosgc/Framora');
     }
+
     /**
-     * Display a listing of the resource.
+     * Display updates page using cached GitHub commits and pull requests.
+     *
+     * Supports refresh via query string (`?refresh=1`) and persists processed items.
+     *
+     * @param Request $request
+     * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -116,6 +127,8 @@ class AtualizacoesController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     *
+     * @return void
      */
     public function create()
     {
@@ -124,6 +137,9 @@ class AtualizacoesController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
+     * @param Request $request
+     * @return void
      */
     public function store(Request $request)
     {
@@ -132,6 +148,9 @@ class AtualizacoesController extends Controller
 
     /**
      * Display the specified resource.
+     *
+     * @param string $id
+     * @return void
      */
     public function show(string $id)
     {
@@ -140,6 +159,9 @@ class AtualizacoesController extends Controller
 
     /**
      * Show the form for editing the specified resource.
+     *
+     * @param string $id
+     * @return void
      */
     public function edit(string $id)
     {
@@ -147,7 +169,9 @@ class AtualizacoesController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Refresh locally cached GitHub updates.
+     *
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update()
     {
@@ -159,11 +183,19 @@ class AtualizacoesController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param string $id
+     * @return void
      */
     public function destroy(string $id)
     {
         //
     }
+    /**
+     * Fetch commits and pull requests from GitHub and save them locally.
+     *
+     * @return void
+     */
     protected function fetchAndSave(): void
     {
         $commitsFile = "{$this->basePath}/commits.json";

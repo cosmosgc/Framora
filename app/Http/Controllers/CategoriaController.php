@@ -8,8 +8,11 @@ use Illuminate\Http\Request;
 class CategoriaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of categories.
+     *
      * GET /api/categorias
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -29,8 +32,12 @@ class CategoriaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created category.
+     *
      * POST /api/categorias
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -56,8 +63,12 @@ class CategoriaController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified category.
+     *
      * GET /api/categorias/{id}
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
     {
@@ -82,8 +93,13 @@ class CategoriaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified category.
+     *
      * PUT/PATCH /api/categorias/{id}
+     *
+     * @param Request $request
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, string $id)
     {
@@ -115,8 +131,12 @@ class CategoriaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified category.
+     *
      * DELETE /api/categorias/{id}
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(string $id)
     {

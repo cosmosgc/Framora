@@ -13,8 +13,12 @@ use Illuminate\Support\Facades\Auth;
 class GaleriaController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     * Inclui busca, filtros, paginação e ordenação.
+     * Display a paginated list of galleries.
+     *
+     * Supports search, filters, sorting, and pagination.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -76,7 +80,9 @@ class GaleriaController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Return creation data for a new gallery.
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function create()
     {
@@ -90,7 +96,10 @@ class GaleriaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created gallery.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -158,7 +167,10 @@ class GaleriaController extends Controller
 
 
     /**
-     * Display the specified resource.
+     * Display the specified gallery.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
     {
@@ -179,7 +191,10 @@ class GaleriaController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Return edit data for the specified gallery.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function edit(string $id)
     {
@@ -210,7 +225,11 @@ class GaleriaController extends Controller
 
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified gallery and optionally replace its banner.
+     *
+     * @param Request $request
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, string $id)
     {
@@ -316,7 +335,10 @@ class GaleriaController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified gallery and its associated banner.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(string $id)
     {
@@ -343,7 +365,14 @@ class GaleriaController extends Controller
             'message' => 'Galeria removida com sucesso.',
         ]);
     }
-        public function reorderFotos(Request $request, $galeriaId)
+    /**
+     * Reorder photos for a gallery based on received ordered IDs.
+     *
+     * @param Request $request
+     * @param int|string $galeriaId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function reorderFotos(Request $request, $galeriaId)
     {
         $ordered = $request->input('ordered_ids', []);
         if (!is_array($ordered)) {

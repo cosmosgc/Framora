@@ -15,14 +15,24 @@ use App\Models\Inventario;
 
 class StripeController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
     public function __construct()
     {
         // nada por enquanto
     }
 
     /**
-     * Cria uma Stripe Checkout Session para o carrinho $id.
-     * Retorna JSON com url para redirecionar (ideal para SPA/mobile).
+     * Create a Stripe Checkout Session for the specified cart.
+     *
+     * Returns JSON with Stripe URL for API/AJAX requests, or redirects otherwise.
+     *
+     * @param Request $request
+     * @param int|string $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function createCheckoutSession(Request $request, $id)
     {
@@ -130,8 +140,10 @@ class StripeController extends Controller
     }
 
     /**
-     * Página de sucesso: usa session_id para confirmar e finalizar o pedido.
-     * Pode ser chamada via redirect do Stripe Checkout.
+     * Handle Stripe success redirect and finalize the related order.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function success(Request $request)
     {
@@ -200,15 +212,23 @@ class StripeController extends Controller
         }
     }
 
+    /**
+     * Show payment cancellation page.
+     *
+     * @return \Illuminate\View\View
+     */
     public function cancel()
     {
         return view('stripe.cancel'); // crie view simples informando que usuário cancelou
     }
 
     /**
-     * Webhook handler (recomendado)
-     * Configure no painel Stripe a URL /stripe/webhook com o signing secret.
-     * Esse endpoint valida a assinatura e processa events (p.ex. checkout.session.completed).
+     * Handle Stripe webhook events with signature verification.
+     *
+     * Processes checkout completion and payment-related events.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function webhook(Request $request)
     {

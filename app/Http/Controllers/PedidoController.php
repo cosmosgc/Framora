@@ -12,14 +12,23 @@ use Illuminate\Validation\Rule;
 
 class PedidoController extends Controller
 {
-    // Se desejar aplicar middleware auth:
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
     public function __construct()
     {
         // $this->middleware('auth:sanctum');
     }
 
     /**
+     * Display a paginated list of orders.
+     *
      * GET /api/pedidos
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -35,9 +44,12 @@ class PedidoController extends Controller
     }
 
     /**
+     * Store a new order and optionally create related inventory records.
+     *
      * POST /api/pedidos
-     * Espera: user_id (opcional se usar auth), carrinho_id, forma_pagamento, valor_total
-     * opcional: items => array of ['foto_id' => int, ...] para popular inventario
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -92,7 +104,12 @@ class PedidoController extends Controller
     }
 
     /**
+     * Display the specified order.
+     *
      * GET /api/pedidos/{pedido}
+     *
+     * @param Pedido $pedido
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(Pedido $pedido)
     {
@@ -101,7 +118,13 @@ class PedidoController extends Controller
     }
 
     /**
+     * Update the specified order.
+     *
      * PUT/PATCH /api/pedidos/{pedido}
+     *
+     * @param Request $request
+     * @param Pedido $pedido
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Pedido $pedido)
     {
@@ -121,7 +144,12 @@ class PedidoController extends Controller
     }
 
     /**
+     * Remove the specified order and related inventory records.
+     *
      * DELETE /api/pedidos/{pedido}
+     *
+     * @param Pedido $pedido
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(Pedido $pedido)
     {

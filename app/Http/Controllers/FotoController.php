@@ -20,8 +20,12 @@ use App\Helpers\ImageConfig;
 class FotoController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     * Suporte para filtros, busca, ordenação e paginação.
+     * Display a paginated list of photos.
+     *
+     * Supports filtering, searching, sorting, and pagination.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request)
     {
@@ -88,8 +92,9 @@ class FotoController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     * (Para uso em painel administrativo futuramente)
+     * Return creation endpoint guidance.
+     *
+     * @return \Illuminate\Http\JsonResponse
      */
     public function create()
     {
@@ -100,8 +105,10 @@ class FotoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     * Upload de imagem + criação do registro.
+     * Store newly uploaded photos and create database records.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
@@ -270,11 +277,11 @@ class FotoController extends Controller
             'data'    => $fotosCriadas,
         ], 201);
     }
-
-
-
     /**
-     * Display the specified resource.
+     * Display the specified photo.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function show(string $id)
     {
@@ -295,8 +302,10 @@ class FotoController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     * (Usado em interfaces administrativas)
+     * Return edit endpoint guidance for a specific photo.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function edit(string $id)
     {
@@ -317,8 +326,11 @@ class FotoController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     * Permite atualizar informações e substituir a imagem.
+     * Update the specified photo and optionally replace its image file.
+     *
+     * @param Request $request
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, string $id)
     {
@@ -390,7 +402,10 @@ class FotoController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified photo and delete related files.
+     *
+     * @param string $id
+     * @return \Illuminate\Http\JsonResponse
      */
     public function destroy(string $id)
     {
@@ -416,6 +431,15 @@ class FotoController extends Controller
             'message' => 'Foto removida com sucesso.',
         ]);
     }
+    /**
+     * Render a preview image with tiled watermark applied.
+     *
+     * Uses the original file as source and supports `thumb`, `media`, and `full` sizes.
+     *
+     * @param int|string $fotoId
+     * @param string $tipo
+     * @return \Illuminate\Http\Response
+     */
     public function testWatermark($fotoId, $tipo = 'media')
     {
         $foto = Foto::find($fotoId);
