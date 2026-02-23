@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\BannerController;
+use App\Http\Controllers\api\BannerController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\GaleriaController;
 use App\Http\Controllers\FotoController;
@@ -26,6 +26,7 @@ Route::get('/user', function (Request $request) {
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
 
 // Route::name('api.')->group(function () {
         
