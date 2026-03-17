@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Galeria;
 use App\Models\Categoria;
+use App\Models\Foto;
 use app\Models\Banner;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -342,7 +344,7 @@ class GaleriaController extends Controller
      */
     public function destroy(string $id)
     {
-        $galeria = Galeria::with('banner')->find($id);
+        $galeria = Galeria::with(['banner', 'fotos'])->find($id);
 
         if (!$galeria) {
             return response()->json([
@@ -351,19 +353,53 @@ class GaleriaController extends Controller
             ], 404);
         }
 
-        // Remove banner associado (se existir)
-        if ($galeria->banner) {
-            Storage::disk('public')->delete($galeria->banner->imagem);
-            $galeria->banner->delete();
-        }
+        DB::beginTransaction();
 
-        // Remove galeria
-        $galeria->delete();
+        try {
+            foreach ($galeria->fotos as $foto) {
+                $this->deleteFotoFiles($foto);
+                $foto->delete();
+            }
+
+            // Remove banner associado (se existir)
+            if ($galeria->banner) {
+                Storage::disk('public')->delete($galeria->banner->imagem);
+                $galeria->banner->delete();
+            }
+
+            // Remove galeria
+            $galeria->delete();
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao remover a galeria e suas fotos.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'Galeria removida com sucesso.',
+            'message' => 'Galeria, banner e fotos anexadas foram removidos com sucesso.',
         ]);
+    }
+
+    protected function deleteFotoFiles(Foto $foto): void
+    {
+        foreach ([$foto->caminho_thumb, $foto->caminho_foto, $foto->caminho_original] as $path) {
+            if (! $path) {
+                continue;
+            }
+
+            $fullPath = public_path($path);
+
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
     }
     /**
      * Reorder photos for a gallery based on received ordered IDs.

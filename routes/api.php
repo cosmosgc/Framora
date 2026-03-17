@@ -10,7 +10,7 @@ use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\GaleriaController;
 use App\Http\Controllers\FotoController;
 use App\Http\Controllers\FotoDestacadaController;
-use App\Http\Controllers\FavoritoController;
+use App\Http\Controllers\api\FavoritoController;
 use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\InventarioController;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Models\Favorito;
 use App\Models\Galeria;
 use App\Models\Banner;
 use App\Models\Inventario;
@@ -46,7 +47,18 @@ class WebViewsController extends Controller
         if (!$galeria) {
             abort(404, 'Galeria não encontrada');
         }
-        return view('galerias.show', compact('galeria'));
+
+        $favoritosFotosMap = collect();
+
+        if (auth()->check() && $galeria->fotos->isNotEmpty()) {
+            $favoritosFotosMap = Favorito::query()
+                ->where('user_id', auth()->id())
+                ->where('referencia_tipo', 'foto')
+                ->whereIn('referencia_id', $galeria->fotos->pluck('id'))
+                ->pluck('id', 'referencia_id');
+        }
+
+        return view('galerias.show', compact('galeria', 'favoritosFotosMap'));
     }
 
     /**

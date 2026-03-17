@@ -1,59 +1,99 @@
 @props(['galeria'])
 
-<a href="{{ route('galerias.web.show', $galeria->id) }}" 
-   class="relative group overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 bg-gray-100 border border-gray-200">
+@php
+    $banner = $galeria->banner?->imagem ? asset($galeria->banner->imagem) : null;
+    $avatar = $galeria->user?->avatar
+        ? asset($galeria->user->avatar)
+        : null;
+@endphp
 
-    {{-- Banner Image --}}
-    @if($galeria->banner && $galeria->banner->imagem)
-        <img 
-            src="{{ asset($galeria->banner->imagem) }}" 
-            alt="{{ $galeria->nome }}" 
-            class="w-full h-56 object-cover transform group-hover:scale-105 transition duration-300"
-        >
-    @else
-        <div class="w-full h-56 bg-gray-200 flex items-center justify-center text-gray-400">
-            No Image
-        </div>
-    @endif
-
-    {{-- Overlay --}}
-    <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col justify-end p-4">
-        <h2 class="text-white text-lg font-semibold">{{ $galeria->nome }}</h2>
-        <p class="text-sm text-gray-200">
-            {{ $galeria->categoria?->nome ?? 'Sem categoria' }}
-        </p>
-    </div>
-
-    {{-- Card Content --}}
-    <div class="p-5">
-        <p class="text-xl font-semibold text-gray-800 mb-1">{{ $galeria->nome }}</p>
-
-        <p class="text-sm text-gray-500 mb-3">
-            {{ $galeria->categoria?->nome ?? 'Sem categoria' }}
-        </p>
-
-        <p class="text-gray-600 mb-4">
-            {{ Str::limit($galeria->descricao, 100) }}
-        </p>
-
-        {{-- Location & Date --}}
-        <div class="text-sm text-gray-500 mb-4">
-            <p>📍 {{ $galeria->local ?? 'Local não informado' }}</p>
-            <p>📅 {{ $galeria->data ?? 'Data não informada' }}</p>
-        </div>
-
-        {{-- User Info --}}
-        @if($galeria->user)
-            <div class="flex items-center gap-3 mt-3 border-t border-gray-200 pt-3">
-                <img 
-                    src="{{ asset($galeria->user->avatar ?? 'default-avatar.png') }}" 
-                    alt="{{ $galeria->user->name }}" 
-                    class="w-8 h-8 rounded-full object-cover"
-                >
-                <span class="text-sm text-gray-700 font-medium">
-                    {{ $galeria->user->name }}
-                </span>
+<article class="group relative overflow-hidden rounded-[28px] border border-stone-200 bg-white shadow-[0_18px_45px_-28px_rgba(20,20,20,0.45)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(20,20,20,0.55)]">
+    <div class="relative h-64 overflow-hidden">
+        @if($banner)
+            <img
+                src="{{ $banner }}"
+                alt="{{ $galeria->nome }}"
+                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            >
+        @else
+            <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-stone-200 via-stone-100 to-white text-sm font-medium uppercase tracking-[0.25em] text-stone-500">
+                Sem banner
             </div>
         @endif
+
+        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent"></div>
+
+        <div class="absolute left-4 right-4 top-4 flex items-start justify-between gap-3">
+            <span class="rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-700 backdrop-blur">
+                {{ $galeria->categoria?->nome ?? 'Sem categoria' }}
+            </span>
+
+            @auth
+                <form method="POST" action="{{ route('favoritos.store') }}" class="relative z-10">
+                    @csrf
+                    <input type="hidden" name="referencia_tipo" value="galeria">
+                    <input type="hidden" name="referencia_id" value="{{ $galeria->id }}">
+                    <button
+                        type="submit"
+                        class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/60 bg-white/85 text-stone-700 shadow-lg backdrop-blur transition duration-300 hover:scale-105 hover:bg-white"
+                        aria-label="Adicionar galeria aos favoritos"
+                        title="Adicionar aos favoritos"
+                    >
+                        <x-heroicon-o-heart class="h-5 w-5" />
+                    </button>
+                </form>
+            @else
+                <a
+                    href="{{ route('login') }}"
+                    class="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/60 bg-white/85 text-stone-700 shadow-lg backdrop-blur transition duration-300 hover:scale-105 hover:bg-white"
+                    aria-label="Entrar para favoritar galeria"
+                    title="Entrar para favoritar"
+                >
+                    <x-heroicon-o-heart class="h-5 w-5" />
+                </a>
+            @endauth
+        </div>
+
+        <div class="absolute bottom-0 left-0 right-0 p-5 text-white">
+            <p class="text-[11px] uppercase tracking-[0.28em] text-white/70">Colecao</p>
+            <h2 class="mt-2 text-2xl font-semibold leading-tight">{{ $galeria->nome }}</h2>
+            <div class="mt-3 flex flex-wrap gap-2 text-xs text-white/85">
+                <span class="rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur">
+                    {{ $galeria->local ?? 'Local a definir' }}
+                </span>
+                <span class="rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur">
+                    {{ $galeria->data ?? 'Data aberta' }}
+                </span>
+            </div>
+        </div>
+
+        <a href="{{ route('galerias.web.show', $galeria->id) }}" class="absolute inset-0" aria-label="Ver galeria {{ $galeria->nome }}"></a>
     </div>
-</a>
+
+    <div class="relative space-y-4 p-5">
+        <p class="line-clamp-3 text-sm leading-6 text-stone-600">
+            {{ Str::limit($galeria->descricao ?: 'Explore esta galeria e descubra os destaques visuais reunidos pelo autor.', 140) }}
+        </p>
+
+        <div class="flex items-center justify-between gap-3 border-t border-stone-100 pt-4">
+            <div class="flex min-w-0 items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-stone-200 text-sm font-semibold text-stone-700">
+                    @if($avatar)
+                        <img src="{{ $avatar }}" alt="{{ $galeria->user->name ?? 'Autor' }}" class="h-full w-full object-cover">
+                    @else
+                        {{ strtoupper(substr($galeria->user->name ?? 'G', 0, 1)) }}
+                    @endif
+                </div>
+                <div class="min-w-0">
+                    <p class="truncate text-sm font-semibold text-stone-900">{{ $galeria->user->name ?? 'Autor desconhecido' }}</p>
+                    <p class="text-xs uppercase tracking-[0.2em] text-stone-500">Ver detalhes</p>
+                </div>
+            </div>
+
+            <a href="{{ route('galerias.web.show', $galeria->id) }}" class="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-stone-700">
+                Abrir
+                <span aria-hidden="true">→</span>
+            </a>
+        </div>
+    </div>
+</article>
