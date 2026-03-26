@@ -55,7 +55,13 @@
                 <tr class="border-t">
                     <td class="p-3">#{{ $pedido->id }}</td>
                     <td class="p-3">
-                        {{ $pedido->user->name ?? '—' }}
+                        @if($pedido->user)
+                            <a href="{{ route('profiles.show', $pedido->user) }}" class="text-blue-600 hover:underline">
+                                {{ $pedido->user->name }}
+                            </a>
+                        @else
+                            —
+                        @endif
                     </td>
                     <td class="p-3">
                         {{ ucfirst($pedido->status_pedido) }}

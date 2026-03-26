@@ -7,6 +7,7 @@ use App\Models\Favorito;
 use App\Models\Galeria;
 use App\Models\Banner;
 use App\Models\Inventario;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class WebViewsController extends Controller
@@ -135,6 +136,52 @@ class WebViewsController extends Controller
         $categoria = Categoria::with('galerias.banner')->findOrFail($id);
 
         return view('categorias.show', compact('categoria'));
+    }
+
+    /**
+     * Show a public profile page for a user.
+     *
+     * @param User $user
+     * @return \Illuminate\View\View
+     */
+    public function UserShow(User $user)
+    {
+        $galerias = $user->galerias()
+            ->with([
+                'banner:id,imagem',
+                'categoria:id,nome',
+                'user:id,name,avatar,bio,created_at',
+            ])
+            ->withCount('fotos')
+            ->orderByDesc('id')
+            ->get();
+
+        $totalFotos = $galerias->sum('fotos_count');
+        $categorias = $galerias
+            ->pluck('categoria.nome')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $valorMedio = $galerias
+            ->pluck('valor_foto')
+            ->filter(fn ($valor) => !is_null($valor))
+            ->avg();
+
+        $destaque = $galerias->first();
+
+        return view('users.show', [
+            'user' => $user,
+            'galerias' => $galerias,
+            'stats' => [
+                'total_galerias' => $galerias->count(),
+                'total_fotos' => $totalFotos,
+                'total_categorias' => $categorias->count(),
+                'valor_medio' => $valorMedio,
+            ],
+            'categorias' => $categorias,
+            'destaque' => $destaque,
+        ]);
     }
     /**
      * Show authenticated user's inventory page grouped by gallery.

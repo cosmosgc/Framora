@@ -27,7 +27,15 @@
                 <td>{{ $galeria->id }}</td>
                 <td>{{ $galeria->nome }}</td>
                 <td>{{ $galeria->categoria->nome ?? '—' }}</td>
-                <td>{{ $galeria->user->name ?? '—' }}</td>
+                <td>
+                    @if($galeria->user)
+                        <a href="{{ route('profiles.show', $galeria->user) }}" class="text-blue-600 hover:underline">
+                            {{ $galeria->user->name }}
+                        </a>
+                    @else
+                        —
+                    @endif
+                </td>
                 <td>{{ $galeria->fotos_count }}</td>
                 <td>
                     @if($galeria->valor_foto)

@@ -85,8 +85,14 @@
                     @endif
                 </div>
                 <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-stone-900">{{ $galeria->user->name ?? 'Autor desconhecido' }}</p>
-                    <p class="text-xs uppercase tracking-[0.2em] text-stone-500">Ver detalhes</p>
+                    @if($galeria->user)
+                        <a href="{{ route('profiles.show', $galeria->user) }}" class="truncate text-sm font-semibold text-stone-900 transition hover:text-amber-700">
+                            {{ $galeria->user->name }}
+                        </a>
+                    @else
+                        <p class="truncate text-sm font-semibold text-stone-900">Autor desconhecido</p>
+                    @endif
+                    <p class="text-xs uppercase tracking-[0.2em] text-stone-500">Ver perfil</p>
                 </div>
             </div>
 

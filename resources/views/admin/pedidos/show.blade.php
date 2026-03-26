@@ -14,7 +14,16 @@
 </div>
 
 <div class="mb-4 text-sm text-gray-700 space-y-1">
-    <div><strong>Usuário:</strong> {{ $pedido->user->name ?? '—' }}</div>
+    <div>
+        <strong>Usuário:</strong>
+        @if($pedido->user)
+            <a href="{{ route('profiles.show', $pedido->user) }}" class="text-blue-600 hover:underline">
+                {{ $pedido->user->name }}
+            </a>
+        @else
+            —
+        @endif
+    </div>
     <div><strong>Status:</strong> {{ ucfirst($pedido->status_pedido) }}</div>
     <div><strong>Pagamento:</strong> {{ ucfirst($pedido->forma_pagamento) }}</div>
 </div>

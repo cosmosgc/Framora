@@ -16,7 +16,15 @@
 
 <div class="mb-4 text-sm text-gray-600">
     <strong>Categoria:</strong> {{ $galeria->categoria->nome ?? '—' }} |
-    <strong>Autor:</strong> {{ $galeria->user->name ?? '—' }} |
+    <strong>Autor:</strong>
+    @if($galeria->user)
+        <a href="{{ route('profiles.show', $galeria->user) }}" class="text-blue-600 hover:underline">
+            {{ $galeria->user->name }}
+        </a>
+    @else
+        —
+    @endif
+    |
     <strong>Total de fotos:</strong> {{ $galeria->fotos->count() }}
 </div>
 

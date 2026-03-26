@@ -25,7 +25,15 @@
         @foreach($pedidos as $pedido)
             <tr>
                 <td>#{{ $pedido->id }}</td>
-                <td>{{ $pedido->user->name ?? '—' }}</td>
+                <td>
+                    @if($pedido->user)
+                        <a href="{{ route('profiles.show', $pedido->user) }}" class="text-blue-600 hover:underline">
+                            {{ $pedido->user->name }}
+                        </a>
+                    @else
+                        —
+                    @endif
+                </td>
                 <td>{{ ucfirst($pedido->status_pedido) }}</td>
                 <td>
                     @if($pedido->source === 'inventario')
