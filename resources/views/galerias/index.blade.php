@@ -1,11 +1,31 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4">
-    <h1 class="text-2xl font-bold mb-4">Galerias</h1>
+<div class="space-y-8">
+    <section class="app-shell px-6 py-8 sm:px-8">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-2xl space-y-3">
+                <p class="page-eyebrow">Galerias</p>
+                <h1 class="page-title">Explore coleções com uma apresentação mais limpa e direta.</h1>
+                <p class="page-copy">
+                    Esta página agora segue a mesma base visual do resto da aplicação, sem depender de uma hero section exagerada.
+                </p>
+            </div>
 
-    <div id="favorito-feedback" class="hidden mb-4 rounded-lg px-4 py-3 text-sm"></div>
-    <div id="galerias-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+            <div id="favorito-feedback" class="hidden max-w-md"></div>
+        </div>
+    </section>
+
+    <section class="app-panel p-6 sm:p-8">
+        <div class="mb-6 flex items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-semibold tracking-tight text-stone-950">Todas as galerias</h2>
+                <p class="mt-2 page-copy">Carregadas em tempo real e prontas para favoritar.</p>
+            </div>
+        </div>
+
+        <div id="galerias-list" class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3"></div>
+    </section>
 </div>
 
 <script>
@@ -17,15 +37,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const IS_AUTHENTICATED = @json(auth()->check());
     const container = document.getElementById('galerias-list');
     const feedback = document.getElementById('favorito-feedback');
-    container.innerHTML = '<p>Carregando galerias...</p>';
+    container.innerHTML = '<div class="app-panel-muted p-5 text-sm text-stone-600">Carregando galerias...</div>';
 
     const showFeedback = (message, type = 'success') => {
-        feedback.className = `mb-4 rounded-lg px-4 py-3 text-sm ${
+        feedback.className = `app-alert ${
             type === 'error'
-                ? 'bg-red-100 text-red-800'
+                ? 'app-alert-error'
                 : type === 'info'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-green-100 text-green-800'
+                    ? 'app-alert-info'
+                    : 'app-alert-success'
         }`;
         feedback.textContent = message;
         feedback.classList.remove('hidden');
@@ -36,26 +56,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         const result = await response.json();
 
         if (!result.success) {
-            container.innerHTML = '<p>Erro ao carregar galerias.</p>';
+            container.innerHTML = '<div class="app-alert app-alert-error">Erro ao carregar galerias.</div>';
             return;
         }
 
         container.innerHTML = result.data.map(galeria => `
-            <div class="border rounded-lg shadow p-3 bg-white hover:shadow-md transition">
-                <img src="${BASE_URL}/${galeria.banner?.imagem ?? 'placeholder.jpg'}" alt="${galeria.nome}" class="w-full h-48 object-cover rounded mb-2">
-                <h2 class="font-semibold text-lg">${galeria.nome}</h2>
-                <p class="text-sm text-gray-600">${galeria.descricao ?? ''}</p>
-                <div class="mt-3 flex items-center justify-between gap-3">
-                    <a href="${BASE_URL}/galerias/${galeria.id}" class="inline-block text-blue-600 hover:underline">Ver detalhes</a>
-                    <button
-                        type="button"
-                        class="rounded-lg border border-pink-200 px-3 py-2 text-sm font-medium text-pink-700 hover:bg-pink-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        data-favorito-id="${galeria.id}"
-                    >
-                        Favoritar
-                    </button>
+            <article class="overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-[0_18px_38px_-30px_rgba(28,25,23,0.28)] transition hover:-translate-y-1 hover:shadow-[0_25px_50px_-32px_rgba(28,25,23,0.34)]">
+                <div class="aspect-[4/3] overflow-hidden bg-stone-100">
+                    <img src="${BASE_URL}/${galeria.banner?.imagem ?? 'placeholder.jpg'}" alt="${galeria.nome}" class="h-full w-full object-cover">
                 </div>
-            </div>
+                <div class="space-y-4 p-5">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">Galeria</p>
+                        <h2 class="mt-2 text-xl font-semibold text-stone-950">${galeria.nome}</h2>
+                        <p class="mt-2 line-clamp-3 text-sm leading-6 text-stone-600">${galeria.descricao ?? ''}</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-3">
+                        <a href="${BASE_URL}/galerias/${galeria.id}" class="btn-secondary px-4 py-2.5">Ver detalhes</a>
+                        <button
+                            type="button"
+                            class="btn-danger"
+                            data-favorito-id="${galeria.id}"
+                        >
+                            Favoritar
+                        </button>
+                    </div>
+                </div>
+            </article>
         `).join('');
 
         container.addEventListener('click', async (event) => {
@@ -96,8 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 button.textContent = 'Favoritado';
-                button.classList.remove('border-pink-200', 'text-pink-700', 'hover:bg-pink-50');
-                button.classList.add('border-green-200', 'text-green-700', 'bg-green-50');
+                button.className = 'btn-primary px-4 py-2.5';
                 showFeedback(data.message || 'Galeria adicionada aos favoritos.');
             } catch (error) {
                 button.disabled = false;
@@ -107,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<p>Erro ao conectar ao servidor.</p>';
+        container.innerHTML = '<div class="app-alert app-alert-error">Erro ao conectar ao servidor.</div>';
     }
 });
 </script>

@@ -1,22 +1,41 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-6">
-    <h1 class="text-2xl font-bold mb-4">Buscar galerias</h1>
+<div class="space-y-8">
+    <section class="app-shell px-6 py-8 sm:px-8">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-2xl space-y-3">
+                <p class="page-eyebrow">Busca</p>
+                <h1 class="page-title">Buscar galerias com a mesma estrutura visual das outras páginas.</h1>
+                <p class="page-copy">
+                    Digite um termo para encontrar coleções, revisar os resultados e carregar mais itens sem sair da página.
+                </p>
+            </div>
 
-    <form method="GET" action="{{ route('galerias.web.search') }}" class="mb-4">
-        <div class="flex gap-2 items-center">
-            <input type="search" name="q" id="q" value="{{ $q }}" placeholder="Buscar galerias..." class="flex-1 py-2 px-3 rounded-md border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md">🔎 Buscar</button>
+            @if($q)
+                <div class="stat-pill">
+                    <span>"{{ $q }}"</span>
+                    <span class="text-stone-500 dark:text-stone-400">consulta</span>
+                </div>
+            @endif
         </div>
-    </form>
+    </section>
 
-    <div id="results-meta" class="mb-3 text-sm text-gray-600"></div>
-    <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+    <section class="app-panel p-6 sm:p-8">
+        <form method="GET" action="{{ route('galerias.web.search') }}" class="mb-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input type="search" name="q" id="q" value="{{ $q }}" placeholder="Buscar galerias..." class="field-input flex-1" />
+                <button type="submit" class="btn-primary">Buscar</button>
+            </div>
+        </form>
 
-    <div id="load-more-wrap" class="mt-4 text-center">
-        <button id="load-more" class="px-4 py-2 bg-gray-100 rounded-md shadow-sm hidden">Carregar mais</button>
-    </div>
+        <div id="results-meta" class="mb-4 text-sm text-stone-600 dark:text-stone-300"></div>
+        <div id="search-results" class="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"></div>
+
+        <div id="load-more-wrap" class="mt-6 text-center">
+            <button id="load-more" class="btn-secondary hidden">Carregar mais</button>
+        </div>
+    </section>
 </div>
 
 <script>
@@ -32,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchAndRender(p = 1, append = false) {
         if (!initialQ || initialQ.length < 2) {
-            resultsContainer.innerHTML = '<p class="text-sm text-gray-500">Digite pelo menos 2 caracteres para buscar.</p>';
+            resultsContainer.innerHTML = '<div class="empty-state"><p class="page-copy">Digite pelo menos 2 caracteres para buscar.</p></div>';
             metaEl.textContent = '';
             return;
         }
@@ -41,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const res = await fetch(`${BASE_URL}/api/galerias?search=${encodeURIComponent(initialQ)}&per_page=${perPage}&page=${p}`);
             const json = await res.json();
             if (!json.success) {
-                resultsContainer.innerHTML = '<p class="text-sm text-red-500">Erro ao buscar.</p>';
+                resultsContainer.innerHTML = '<div class="app-alert app-alert-error">Erro ao buscar.</div>';
                 return;
             }
 
@@ -51,36 +70,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             metaEl.textContent = `Mostrando ${json.data.length} de ${json.meta.total} resultados`;
 
             const html = json.data.map(g => `
-                <div class="border rounded-lg shadow p-3 bg-white hover:shadow-md transition">
+                <article class="overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-[0_18px_38px_-30px_rgba(28,25,23,0.28)] dark:border-stone-800 dark:bg-stone-900">
                     <a href="${BASE_URL}/galerias/${g.id}">
-                        <img src="${BASE_URL}/${g.banner?.imagem ?? 'placeholder.jpg'}" alt="${g.nome}" class="w-full h-40 object-cover rounded mb-2">
+                        <img src="${BASE_URL}/${g.banner?.imagem ?? 'placeholder.jpg'}" alt="${g.nome}" class="h-40 w-full object-cover">
                     </a>
-                    <h2 class="font-semibold text-lg">${g.nome}</h2>
-                    <p class="text-sm text-gray-600">${g.descricao ?? ''}</p>
-                    <a href="${BASE_URL}/galerias/${g.id}" class="inline-block mt-2 text-blue-600 hover:underline">Ver detalhes</a>
-                </div>
+                    <div class="space-y-3 p-5">
+                        <h2 class="text-lg font-semibold text-stone-900 dark:text-stone-100">${g.nome}</h2>
+                        <p class="text-sm leading-6 text-stone-600 dark:text-stone-300">${g.descricao ?? ''}</p>
+                        <a href="${BASE_URL}/galerias/${g.id}" class="btn-secondary px-4 py-2.5">Ver detalhes</a>
+                    </div>
+                </article>
             `).join('');
 
-            if (append) resultsContainer.insertAdjacentHTML('beforeend', html);
-            else resultsContainer.innerHTML = html || '<p class="text-sm text-gray-500">Nenhum resultado</p>';
+            if (append) {
+                resultsContainer.insertAdjacentHTML('beforeend', html);
+            } else {
+                resultsContainer.innerHTML = html || '<div class="empty-state"><p class="page-copy">Nenhum resultado encontrado.</p></div>';
+            }
 
-            // load more visibility
             if (page < lastPage) {
                 loadMoreBtn.classList.remove('hidden');
             } else {
                 loadMoreBtn.classList.add('hidden');
             }
-
         } catch (e) {
             console.error(e);
-            resultsContainer.innerHTML = '<p class="text-sm text-red-500">Erro ao conectar ao servidor.</p>';
+            resultsContainer.innerHTML = '<div class="app-alert app-alert-error">Erro ao conectar ao servidor.</div>';
         }
     }
 
-    if (initialQ && initialQ.length >=2) {
+    if (initialQ && initialQ.length >= 2) {
         await fetchAndRender(1, false);
     } else {
-        resultsContainer.innerHTML = '<p class="text-sm text-gray-500">Digite pelo menos 2 caracteres para buscar.</p>';
+        resultsContainer.innerHTML = '<div class="empty-state"><p class="page-copy">Digite pelo menos 2 caracteres para buscar.</p></div>';
     }
 
     loadMoreBtn.addEventListener('click', async () => {

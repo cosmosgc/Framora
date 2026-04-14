@@ -14,22 +14,22 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
-        <div class="min-h-screen">
+    <body class="font-sans antialiased dark:bg-gray-800 bg-gray-100 text-stone-900 dark:bg-gray-900 dark:text-stone-100">
+        <div class="relative min-h-screen overflow-x-hidden">
             {{-- Navbar (crie o arquivo resources/views/layouts/navigation.blade.php depois) --}}
             @include('layouts.navigation')
 
             {{-- Header opcional --}}
             @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header class="px-4 pt-6 sm:px-6 lg:px-8 dark:bg-gray-800">
+                    <div class="app-shell mx-auto max-w-7xl px-6 py-6 sm:px-8">
                         {{ $header }}
                     </div>
                 </header>
             @endisset
 
             {{-- Conteúdo principal --}}
-            <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
                 @yield('content')
             </main>
         </div>

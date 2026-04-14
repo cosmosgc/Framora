@@ -3,47 +3,53 @@
 @section('title', 'Meus Favoritos')
 
 @section('content')
-<div class="container mx-auto max-w-6xl p-4">
-    <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-            <h1 class="text-2xl font-semibold text-gray-900">Meus Favoritos</h1>
-            <p class="text-sm text-gray-600">Veja suas galerias favoritas, fotos salvas e as fotos que voce ja possui no inventario.</p>
-        </div>
+<div class="space-y-8">
+    <section class="app-shell px-6 py-8 sm:px-8">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div class="max-w-2xl space-y-3">
+                <p class="page-eyebrow">Favoritos</p>
+                <h1 class="page-title">Tudo o que você salvou fica reunido em um painel mais organizado.</h1>
+                <p class="page-copy">
+                    Veja galerias favoritas, fotos salvas e os itens que já fazem parte do seu inventário em uma estrutura visual compatível com o restante do site.
+                </p>
+            </div>
 
-        <div class="flex flex-wrap gap-3 text-sm">
-            <div class="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
-                <div class="text-gray-500">Fotos</div>
-                <div class="text-lg font-semibold text-gray-900">{{ $fotoFavoritosCount }}</div>
-            </div>
-            <div class="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
-                <div class="text-gray-500">Galerias</div>
-                <div class="text-lg font-semibold text-gray-900">{{ $galeriaFavoritosCount }}</div>
-            </div>
-            <div class="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
-                <div class="text-gray-500">Fotos compradas</div>
-                <div class="text-lg font-semibold text-gray-900">{{ $ownedFotoFavoritosCount }}</div>
+            <div class="flex flex-wrap gap-3 text-sm">
+                <div class="stat-pill">
+                    <span>{{ $fotoFavoritosCount }}</span>
+                    <span class="text-stone-500 dark:text-stone-400">fotos</span>
+                </div>
+                <div class="stat-pill">
+                    <span>{{ $galeriaFavoritosCount }}</span>
+                    <span class="text-stone-500 dark:text-stone-400">galerias</span>
+                </div>
+                <div class="stat-pill">
+                    <span>{{ $ownedFotoFavoritosCount }}</span>
+                    <span class="text-stone-500 dark:text-stone-400">compradas</span>
+                </div>
             </div>
         </div>
+    </section>
+
+    <div class="space-y-3">
+        @if(session('success'))
+            <div class="app-alert app-alert-success">{{ session('success') }}</div>
+        @endif
+        @if(session('info'))
+            <div class="app-alert app-alert-info">{{ session('info') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="app-alert app-alert-error">{{ $errors->first() }}</div>
+        @endif
     </div>
 
-    @if(session('success'))
-        <div class="mb-4 rounded-lg bg-green-100 px-4 py-3 text-green-800">{{ session('success') }}</div>
-    @endif
-    @if(session('info'))
-        <div class="mb-4 rounded-lg bg-blue-100 px-4 py-3 text-blue-800">{{ session('info') }}</div>
-    @endif
-    @if($errors->any())
-        <div class="mb-4 rounded-lg bg-red-100 px-4 py-3 text-red-800">{{ $errors->first() }}</div>
-    @endif
-
     @if($favoritos->isEmpty())
-        <div class="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center shadow-sm">
-            <h2 class="text-lg font-medium text-gray-900">Nenhum favorito salvo ainda</h2>
-            <p class="mt-2 text-sm text-gray-600">Quando você favoritar uma foto ou galeria, ela vai aparecer aqui.</p>
-            <a href="{{ route('galerias.web.index') }}" class="mt-5 inline-flex rounded-lg bg-black px-4 py-2 text-sm font-medium text-white">
-                Explorar galerias
-            </a>
-        </div>
+        <section class="empty-state">
+            <p class="page-eyebrow">Colecao vazia</p>
+            <h2 class="mt-3 text-2xl font-semibold text-stone-950 dark:text-stone-50">Nenhum favorito salvo ainda.</h2>
+            <p class="mx-auto mt-3 max-w-2xl page-copy">Quando você favoritar uma foto ou galeria, ela vai aparecer aqui.</p>
+            <a href="{{ route('galerias.web.index') }}" class="btn-primary mt-6">Explorar galerias</a>
+        </section>
     @else
         @php
             $sections = [
@@ -64,17 +70,21 @@
 
         <div class="space-y-10">
             @foreach($sections as $sectionTitle => $section)
-                <section>
-                    <div class="mb-4 flex items-center justify-between">
-                        <h2 class="text-xl font-semibold text-gray-900">{{ $sectionTitle }}</h2>
-                        <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-gray-700">
-                            {{ $section['items']->count() }} itens
+                <section class="app-panel p-6 sm:p-8">
+                    <div class="mb-6 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="page-eyebrow">{{ $loop->first ? 'Destaques' : 'Colecao' }}</p>
+                            <h2 class="mt-2 text-2xl font-semibold tracking-tight text-stone-950 dark:text-stone-50">{{ $sectionTitle }}</h2>
+                        </div>
+                        <span class="stat-pill">
+                            <span>{{ $section['items']->count() }}</span>
+                            <span class="text-stone-500 dark:text-stone-400">itens</span>
                         </span>
                     </div>
 
                     @if($section['items']->isEmpty())
-                        <div class="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-8 text-sm text-gray-600 shadow-sm">
-                            {{ $section['empty'] }}
+                        <div class="empty-state !px-6 !py-8">
+                            <p class="page-copy">{{ $section['empty'] }}</p>
                         </div>
                     @else
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -90,29 +100,29 @@
                                         : ($item ? route('galerias.web.show', $item->id) : null);
                                 @endphp
 
-                                <article class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
-                                    <div class="aspect-[4/3] bg-gray-100">
+                                <article class="overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-[0_18px_38px_-30px_rgba(28,25,23,0.28)] dark:border-stone-800 dark:bg-stone-900">
+                                    <div class="aspect-[4/3] bg-stone-100 dark:bg-stone-800">
                                         @if($thumb)
                                             <img src="{{ asset($thumb) }}" alt="" class="h-full w-full object-cover">
                                         @else
-                                            <div class="flex h-full items-center justify-center text-sm text-gray-500">Sem imagem disponivel</div>
+                                            <div class="flex h-full items-center justify-center text-sm text-stone-500 dark:text-stone-400">Sem imagem disponivel</div>
                                         @endif
                                     </div>
 
-                                    <div class="space-y-3 p-4">
+                                    <div class="space-y-4 p-5">
                                         <div class="flex items-start justify-between gap-3">
                                             <div>
                                                 <div class="flex flex-wrap gap-2">
-                                                    <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-gray-700">
+                                                    <span class="inline-flex rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-stone-700 dark:bg-stone-800 dark:text-stone-300">
                                                         {{ $isFoto ? 'Foto' : 'Galeria' }}
                                                     </span>
                                                     @if($favorito->is_owned ?? false)
-                                                        <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-emerald-700">
+                                                        <span class="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-200">
                                                             No inventario
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <h3 class="mt-2 text-lg font-semibold text-gray-900">
+                                                <h3 class="mt-3 text-lg font-semibold text-stone-900 dark:text-stone-100">
                                                     @if($item)
                                                         {{ $isFoto ? 'Foto #'.$item->id : ($item->nome ?? 'Galeria #'.$item->id) }}
                                                     @else
@@ -124,28 +134,26 @@
                                             <form action="{{ route('favoritos.destroy', $favorito->id) }}" method="POST">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50">
-                                                    Remover
-                                                </button>
+                                                <button type="submit" class="btn-danger">Remover</button>
                                             </form>
                                         </div>
 
-                                        <div class="text-sm text-gray-600">
+                                        <div class="text-sm leading-6 text-stone-600 dark:text-stone-300">
                                             @if($item && $isFoto)
                                                 <p>Galeria: {{ $item->galeria->nome ?? 'Sem galeria' }}</p>
                                             @elseif($item)
                                                 <p>{{ $item->descricao ?: 'Galeria salva nos seus favoritos.' }}</p>
                                                 @if($item->banner?->titulo)
-                                                    <p class="mt-1 text-xs text-gray-500">Banner: {{ $item->banner->titulo }}</p>
+                                                    <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">Banner: {{ $item->banner->titulo }}</p>
                                                 @endif
                                             @else
                                                 <p>O conteudo original deste favorito nao esta mais disponivel.</p>
                                             @endif
-                                            <p class="mt-1">Salvo em {{ optional($favorito->criado_em)->format('d/m/Y H:i') ?? 'data indisponivel' }}</p>
+                                            <p class="mt-2">Salvo em {{ optional($favorito->criado_em)->format('d/m/Y H:i') ?? 'data indisponivel' }}</p>
                                         </div>
 
                                         @if($destino)
-                                            <a href="{{ $destino }}" class="inline-flex rounded-lg bg-black px-4 py-2 text-sm font-medium text-white">
+                                            <a href="{{ $destino }}" class="btn-primary">
                                                 {{ $isFoto ? 'Ver foto' : 'Ver galeria' }}
                                             </a>
                                         @endif

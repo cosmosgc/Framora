@@ -85,6 +85,10 @@ Route::get('/updates', action: [AtualizacoesController::class, 'index'])->name('
 Route::get('/updates/update', [AtualizacoesController::class, 'update'])->name('updates.update');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
+    Route::post('/carrinho/adicionar', [CarrinhoController::class, 'store'])->name('carrinho.store');
+    Route::delete('/carrinho/remover/{id}', [CarrinhoController::class, 'destroy'])->name('carrinho.destroy');
+
     // rota que o form vai submeter (POST)
     Route::post('/stripe/checkout/{id}', [StripeController::class, 'createCheckoutSession'])
          ->name('stripe.checkout');
